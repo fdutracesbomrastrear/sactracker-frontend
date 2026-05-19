@@ -17,6 +17,10 @@ export type ChatMessage = {
   content: string;
   fromMe: boolean;
   createdAt: string;
+  mediaType?: string | null;
+  mediaPath?: string | null;
+  fileName?: string | null;
+  mimetype?: string | null;
 };
 
 export type LoginResponse = {
@@ -95,6 +99,36 @@ export async function sendMessage(ticketId: string, content: string) {
     body: JSON.stringify({ content }),
   });
   if (!res.ok) throw new Error('Falha ao enviar mensagem');
+  return res.json();
+}
+
+export async function sendMessageMedia(
+  ticketId: string,
+  file: File,
+  caption?: string
+): Promise<ChatMessage> {
+  const token = getToken();
+  const form = new FormData();
+  form.append('file', file);
+  if (caption?.trim()) form.append('caption', caption.trim());
+
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/messages/media`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+  });
+
+  if (res.status === 401) {
+    clearSession();
+    if (typeof window !== 'undefined') window.location.href = '/login';
+    throw new Error('Sessão expirada');
+  }
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'Falha ao enviar anexo');
+  }
+
   return res.json();
 }
 

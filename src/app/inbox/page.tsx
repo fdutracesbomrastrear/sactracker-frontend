@@ -9,6 +9,7 @@ import {
   fetchTickets,
   releaseTicketToBot,
   sendMessage,
+  sendMessageMedia,
   TicketItem,
   updateTicketStatus,
 } from '@/lib/api';
@@ -16,6 +17,7 @@ import { clearSession, getToken, getUser } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FinanceiroPanel } from '@/components/FinanceiroPanel';
+import { ChatMessageContent } from '@/components/ChatMessageContent';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
 
@@ -51,8 +53,10 @@ export default function InboxPage() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const activeTicketIdRef = useRef<string | null>(null);
   const filterRef = useRef(filter);
 
@@ -187,33 +191,57 @@ export default function InboxPage() {
     };
   }, []);
 
+  const applySentMessage = (saved: ChatMessage) => {
+    const humanMode = { mode: 'HUMAN' as const };
+    setMessages((prev) => appendMessage(prev, saved));
+    setActiveTicket((prev) => (prev ? { ...prev, ...humanMode } : prev));
+    setTickets((prev) =>
+      prev.map((t) =>
+        t.id === activeTicket?.id
+          ? {
+              ...t,
+              ...humanMode,
+              lastMessage: saved.content,
+              lastMessageAt: saved.createdAt,
+              unread: 0,
+            }
+          : t
+      )
+    );
+  };
+
   const handleSend = async () => {
-    if (!activeTicket || !input.trim() || sending) return;
+    if (!activeTicket || sending) return;
+    const texto = input.trim();
+    if (!texto && !selectedFile) return;
+
     setSending(true);
+    setError(null);
     try {
-      const saved = await sendMessage(activeTicket.id, input.trim());
-      setMessages((prev) => appendMessage(prev, saved));
+      let saved: ChatMessage;
+      if (selectedFile) {
+        saved = await sendMessageMedia(activeTicket.id, selectedFile, texto || undefined);
+        setSelectedFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      } else {
+        saved = await sendMessage(activeTicket.id, texto);
+      }
+      applySentMessage(saved);
       setInput('');
-      const humanMode = { mode: 'HUMAN' as const };
-      setActiveTicket((prev) => (prev ? { ...prev, ...humanMode } : prev));
-      setTickets((prev) =>
-        prev.map((t) =>
-          t.id === activeTicket.id
-            ? {
-                ...t,
-                ...humanMode,
-                lastMessage: saved.content,
-                lastMessageAt: saved.createdAt,
-                unread: 0,
-              }
-            : t
-        )
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Erro ao enviar. Verifique se o WhatsApp está conectado.'
       );
-    } catch {
-      setError('Erro ao enviar mensagem. Verifique se o WhatsApp está conectado.');
     } finally {
       setSending(false);
     }
+  };
+
+  const handleFilePick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) setSelectedFile(file);
   };
 
   const handleLogout = () => {
@@ -473,7 +501,13 @@ export default function InboxPage() {
                         : 'bg-white border border-slate-200 text-slate-700 rounded-tl-sm'
                     }`}
                   >
-                    <p className="text-[15px] leading-relaxed">{msg.content}</p>
+                    <ChatMessageContent
+                      messageId={msg.id}
+                      content={msg.content}
+                      mediaType={msg.mediaType}
+                      fileName={msg.fileName}
+                      fromMe={msg.fromMe}
+                    />
                     <span
                       className={`text-[11px] mt-2 block ${
                         msg.fromMe ? 'text-blue-200 text-right' : 'text-slate-400'
