@@ -522,25 +522,61 @@ export default function InboxPage() {
             </div>
 
             <div className="p-4 bg-white border-t border-slate-200 shrink-0">
-              <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-2xl p-2 pr-3">
+              {selectedFile && (
+                <div className="mb-2 flex items-center gap-2 text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+                  <span className="truncate flex-1">📎 {selectedFile.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedFile(null);
+                      if (fileInputRef.current) fileInputRef.current.value = '';
+                    }}
+                    className="text-red-500 hover:text-red-700 text-xs font-semibold shrink-0"
+                  >
+                    Remover
+                  </button>
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+                onChange={handleFilePick}
+              />
+              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-2xl p-2 pr-3">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={sending}
+                  title="Anexar arquivo"
+                  className="p-2.5 text-slate-500 hover:text-purple-700 hover:bg-white rounded-xl disabled:opacity-50"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                  </svg>
+                </button>
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="Digite sua mensagem..."
+                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && void handleSend()}
+                  placeholder={selectedFile ? 'Legenda opcional...' : 'Digite sua mensagem...'}
                   className="flex-1 bg-transparent border-none focus:outline-none text-slate-700 px-2"
                   disabled={sending}
                 />
                 <button
                   type="button"
-                  onClick={handleSend}
-                  disabled={sending || !input.trim()}
+                  onClick={() => void handleSend()}
+                  disabled={sending || (!input.trim() && !selectedFile)}
                   className="px-6 py-3 bg-amber-400 hover:bg-amber-500 text-purple-950 font-bold rounded-xl disabled:opacity-50"
                 >
                   {sending ? '...' : 'Enviar'}
                 </button>
               </div>
+              <p className="text-[10px] text-slate-400 mt-1.5 px-1">
+                Imagens, PDF, documentos, áudio e vídeo (até 16 MB)
+              </p>
             </div>
           </>
         )}
