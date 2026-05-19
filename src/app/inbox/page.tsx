@@ -12,6 +12,9 @@ import {
 } from '@/lib/api';
 import { clearSession, getToken, getUser } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { FinanceiroPanel } from '@/components/FinanceiroPanel';
+import { formatarTextoBoleto } from '@/lib/financeiro';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
 
