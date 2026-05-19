@@ -1,3 +1,5 @@
+import { parseUserRole, UserRole } from './roles';
+
 const TOKEN_KEY = 'sactracker_token';
 const USER_KEY = 'sactracker_user';
 
@@ -5,6 +7,7 @@ export type AuthUser = {
   id: string;
   name: string;
   email: string;
+  role: UserRole;
 };
 
 export function getToken(): string | null {

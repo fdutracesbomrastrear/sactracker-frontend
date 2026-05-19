@@ -23,9 +23,11 @@ export type ChatMessage = {
   mimetype?: string | null;
 };
 
+import { UserRole } from './roles';
+
 export type LoginResponse = {
   token: string;
-  user: { id: string; name: string; email: string };
+  user: { id: string; name: string; email: string; role: UserRole };
 };
 
 function authHeaders(): HeadersInit {
@@ -39,7 +41,7 @@ function authHeaders(): HeadersInit {
   return headers;
 }
 
-async function apiFetch(url: string, options: RequestInit = {}) {
+export async function apiFetch(url: string, options: RequestInit = {}) {
   const res = await fetch(url, {
     ...options,
     headers: {

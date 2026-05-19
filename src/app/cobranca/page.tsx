@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
+import { AppSidebar } from '@/components/AppSidebar';
 import {
   CobrancaResultado,
   CobrancaStatus,
@@ -17,11 +17,13 @@ import {
   SimulacaoCobranca,
 } from '@/lib/cobranca';
 import { clearSession, getUser } from '@/lib/auth';
+import { parseUserRole, roleLabel } from '@/lib/roles';
 import { useRouter } from 'next/navigation';
 
 export default function CobrancaPage() {
   const router = useRouter();
   const user = getUser();
+  const role = parseUserRole(user?.role);
   const [status, setStatus] = useState<CobrancaStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [acao, setAcao] = useState<string | null>(null);
@@ -65,30 +67,34 @@ export default function CobrancaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <header className="h-14 border-b border-slate-200 bg-white flex items-center justify-between px-6">
-        <div className="flex items-center gap-4">
-          <Link href="/inbox" className="text-sm font-semibold text-blue-600 hover:underline">
-            ← Inbox
-          </Link>
-          <h1 className="text-lg font-bold text-purple-950">Cobrança ativa</h1>
-        </div>
+    <div className="flex min-h-screen bg-slate-50">
+      <AppSidebar role={role} />
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="h-14 border-b border-slate-200 bg-white flex items-center justify-between px-6 shrink-0">
+          <div>
+            <h1 className="text-lg font-bold text-purple-950">Cobrança ativa</h1>
+            <p className="text-xs text-slate-500">Disparos e simulações</p>
+          </div>
         <div className="flex items-center gap-3">
-          {user && <span className="text-xs text-slate-500">{user.name}</span>}
+          {user && (
+            <span className="text-xs text-slate-500">
+              {user.name} · {roleLabel(role)}
+            </span>
+          )}
           <button
             type="button"
             onClick={() => {
               clearSession();
               router.push('/login');
             }}
-            className="text-xs text-slate-600 hover:text-slate-900"
+            className="text-xs font-medium text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-lg hover:bg-slate-100"
           >
             Sair
           </button>
         </div>
       </header>
 
-      <main className="flex-1 p-6 max-w-3xl mx-auto w-full space-y-6">
+      <main className="flex-1 p-6 max-w-3xl w-full mx-auto space-y-6 overflow-y-auto">
         {loading && <p className="text-sm text-slate-500">Carregando...</p>}
         {erro && (
           <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg p-3">
@@ -164,7 +170,8 @@ export default function CobrancaPage() {
             )}
           </div>
         )}
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

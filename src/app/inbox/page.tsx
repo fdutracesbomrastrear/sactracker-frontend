@@ -15,9 +15,11 @@ import {
 } from '@/lib/api';
 import { clearSession, getToken, getUser } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { FinanceiroPanel } from '@/components/FinanceiroPanel';
 import { ChatMessageContent } from '@/components/ChatMessageContent';
+import { AppSidebar } from '@/components/AppSidebar';
+import { parseUserRole } from '@/lib/roles';
+import { TicketToolsPanel } from '@/components/TicketToolsPanel';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
 
@@ -46,6 +48,7 @@ function appendMessage(prev: ChatMessage[], message: ChatMessage): ChatMessage[]
 export default function InboxPage() {
   const router = useRouter();
   const user = getUser();
+  const userRole = parseUserRole(user?.role);
   const [filter, setFilter] = useState<'OPEN' | 'PENDING'>('OPEN');
   const [tickets, setTickets] = useState<TicketItem[]>([]);
   const [activeTicket, setActiveTicket] = useState<TicketItem | null>(null);
@@ -55,6 +58,10 @@ export default function InboxPage() {
   const [sending, setSending] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const [toolsTab, setToolsTab] = useState<'crm' | 'agcob'>('crm');
+  const [toolsMenuOpen, setToolsMenuOpen] = useState(false);
+  const [documentoConsulta, setDocumentoConsulta] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const activeTicketIdRef = useRef<string | null>(null);
@@ -103,6 +110,12 @@ export default function InboxPage() {
   useEffect(() => {
     if (activeTicket) loadMessages(activeTicket.id);
   }, [activeTicket, loadMessages]);
+
+  useEffect(() => {
+    setToolsOpen(false);
+    setToolsMenuOpen(false);
+    setDocumentoConsulta('');
+  }, [activeTicket?.id]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -306,38 +319,7 @@ export default function InboxPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 font-sans">
-      <div className="w-20 bg-purple-950 flex flex-col items-center py-6 shadow-2xl z-20 shrink-0 px-2">
-        <div className="h-12 w-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center shadow-lg mb-4">
-          <span className="font-bold text-xl text-purple-950">ST</span>
-        </div>
-        <Link
-          href="/inbox"
-          className="w-full aspect-square flex items-center justify-center text-amber-400 bg-white/10 rounded-xl mb-2"
-          title="Atendimentos"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-          </svg>
-        </Link>
-        <Link
-          href="/financeiro"
-          className="w-full aspect-square flex items-center justify-center text-purple-300 hover:text-white hover:bg-white/5 rounded-xl mb-2"
-          title="Financeiro"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </Link>
-        <Link
-          href="/cobranca"
-          className="w-full aspect-square flex items-center justify-center text-purple-300 hover:text-white hover:bg-white/5 rounded-xl"
-          title="Cobrança ativa"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-          </svg>
-        </Link>
-      </div>
+      <AppSidebar role={userRole} />
 
       <div className="w-80 bg-white border-r border-slate-200 flex flex-col z-10 shrink-0">
         <div className="p-5 border-b border-slate-100">
@@ -423,14 +405,14 @@ export default function InboxPage() {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col min-w-0 bg-[#e8edf4] bg-[radial-gradient(circle_at_1px_1px,rgba(88,28,135,0.06)_1px,transparent_0)] bg-[length:24px_24px]">
+      <div className="relative flex-1 flex flex-col min-w-0 overflow-hidden bg-[#e8edf4] bg-[radial-gradient(circle_at_1px_1px,rgba(88,28,135,0.06)_1px,transparent_0)] bg-[length:24px_24px]">
         {!activeTicket ? (
           <div className="flex-1 flex items-center justify-center text-slate-400">
             Selecione um atendimento ou aguarde novas mensagens
           </div>
         ) : (
           <>
-            <div className="h-[4.5rem] border-b border-slate-200/80 bg-white/90 backdrop-blur-md flex items-center justify-between px-6 shrink-0 shadow-sm">
+            <div className="relative z-10 h-[4.5rem] border-b border-slate-200/80 bg-white/90 backdrop-blur-md flex items-center justify-between px-6 shrink-0 shadow-sm">
               <div className="flex items-center gap-4 min-w-0">
                 <div className="w-11 h-11 bg-gradient-to-br from-violet-100 to-purple-200 ring-2 ring-white shadow-md rounded-full flex items-center justify-center font-bold text-purple-800 text-base shrink-0">
                   {activeTicket.contact.name.charAt(0)}
@@ -471,6 +453,42 @@ export default function InboxPage() {
                     Devolver ao bot
                   </button>
                 )}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setToolsMenuOpen((v) => !v)}
+                    className="px-3 py-2 bg-white text-purple-900 text-sm font-bold rounded-lg ring-1 ring-purple-200 hover:bg-purple-50 transition-colors"
+                    title="CRM e agendamentos"
+                  >
+                    +
+                  </button>
+                  {toolsMenuOpen && (
+                    <div className="absolute right-0 top-full mt-1 w-44 rounded-xl border border-slate-200 bg-white shadow-lg py-1 z-[60]">
+                      <button
+                        type="button"
+                        className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                        onClick={() => {
+                          setToolsTab('crm');
+                          setToolsOpen(true);
+                          setToolsMenuOpen(false);
+                        }}
+                      >
+                        CRM
+                      </button>
+                      <button
+                        type="button"
+                        className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                        onClick={() => {
+                          setToolsTab('agcob');
+                          setToolsOpen(true);
+                          setToolsMenuOpen(false);
+                        }}
+                      >
+                        Ag. Cob.
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <button
                   type="button"
                   onClick={handleResolve}
@@ -489,14 +507,14 @@ export default function InboxPage() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 space-y-3">
+            <div className="relative z-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6 space-y-3">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
                   className={`flex w-full ${msg.fromMe ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`relative max-w-[min(100%,32rem)] px-4 py-3 shadow-md ${
+                    className={`max-w-[min(100%,32rem)] px-4 py-3 shadow-md ${
                       msg.fromMe
                         ? 'bg-gradient-to-br from-violet-600 to-purple-800 text-white rounded-2xl rounded-br-md shadow-purple-900/15'
                         : 'bg-white text-slate-800 rounded-2xl rounded-bl-md ring-1 ring-slate-200/90 shadow-slate-200/50'
@@ -522,7 +540,7 @@ export default function InboxPage() {
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="p-4 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shrink-0 shadow-[0_-4px_24px_rgba(15,23,42,0.06)]">
+            <div className="relative z-0 p-4 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shrink-0 shadow-[0_-4px_24px_rgba(15,23,42,0.06)]">
               {selectedFile && (
                 <div className="mb-3 flex items-center gap-3 text-sm text-slate-700 bg-violet-50/80 ring-1 ring-violet-100 rounded-xl px-3 py-2.5">
                   <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-base shadow-sm">📎</span>
@@ -582,6 +600,15 @@ export default function InboxPage() {
             </div>
           </>
         )}
+        {toolsOpen && activeTicket && (
+          <TicketToolsPanel
+            ticketId={activeTicket.id}
+            contactName={activeTicket.contact.name}
+            documentoSugerido={documentoConsulta}
+            initialTab={toolsTab}
+            onClose={() => setToolsOpen(false)}
+          />
+        )}
       </div>
 
       <div className="w-80 border-l border-slate-200 bg-white flex flex-col shrink-0 min-h-0">
@@ -589,6 +616,7 @@ export default function InboxPage() {
           compact
           telefoneAtivo={activeTicket?.contact.phone}
           ticketId={activeTicket?.id}
+          onDocumentoConsultado={setDocumentoConsulta}
           onEnviarNoChat={activeTicket ? handleEnviarBoletoNoChat : undefined}
           onMensagensEnviadas={
             activeTicket ? () => void loadMessages(activeTicket.id) : undefined

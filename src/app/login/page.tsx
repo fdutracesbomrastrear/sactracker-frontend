@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { login } from '@/lib/api';
-import { isAuthenticated, setSession } from '@/lib/auth';
+import { getUser, isAuthenticated, setSession } from '@/lib/auth';
+import { getHomePath, parseUserRole } from '@/lib/roles';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,7 +15,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated()) {
-      router.replace('/inbox');
+      router.replace(getHomePath(parseUserRole(getUser()?.role)));
     }
   }, [router]);
 
@@ -26,7 +27,7 @@ export default function LoginPage() {
     try {
       const { token, user } = await login(email, password);
       setSession(token, user);
-      router.push('/inbox');
+      router.push(getHomePath(parseUserRole(user.role)));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao entrar');
     } finally {
@@ -94,8 +95,10 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-purple-300/70">
-          Primeiro acesso? Rode <code className="text-amber-300">npm run db:seed</code> no backend
+        <p className="mt-6 text-center text-xs text-purple-300/70 leading-relaxed">
+          Primeiro acesso? Rode <code className="text-amber-300">npm run db:seed</code> no backend.
+          <br />
+          Atendente: atendente@bomrastrear.com · Financeiro: financeiro@bomrastrear.com
         </p>
       </div>
     </div>

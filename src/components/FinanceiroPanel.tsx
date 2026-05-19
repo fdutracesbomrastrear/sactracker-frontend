@@ -20,6 +20,7 @@ type FinanceiroPanelProps = {
   ticketId?: string;
   onEnviarNoChat?: (texto: string) => void;
   onMensagensEnviadas?: () => void;
+  onDocumentoConsultado?: (documento: string) => void;
 };
 
 function statusBadgeClass(status: string) {
@@ -36,6 +37,7 @@ export function FinanceiroPanel({
   ticketId,
   onEnviarNoChat,
   onMensagensEnviadas,
+  onDocumentoConsultado,
 }: FinanceiroPanelProps) {
   const [busca, setBusca] = useState('');
   const [buscaDeb, setBuscaDeb] = useState('');
@@ -92,6 +94,7 @@ export function FinanceiroPanel({
       const g = await fetchFinanceiroPorDocumento(doc);
       setGrupoUnico(g);
       setDados([]);
+      onDocumentoConsultado?.(doc);
     } catch (e) {
       setGrupoUnico(null);
       setErro(e instanceof Error ? e.message : 'Cliente não encontrado');

@@ -2,18 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { isAuthenticated } from '@/lib/auth';
+import { getHomePath, parseUserRole, UserRole } from '@/lib/roles';
+import { getUser, isAuthenticated } from '@/lib/auth';
 
 type Props = {
   children: React.ReactNode;
+  allowedRoles?: UserRole[];
   className?: string;
 };
 
-/**
- * Redireciona para /login se não autenticado.
- * A checagem roda uma única vez por montagem (ref), mesmo com re-renders do router.
- */
-export function AuthGuard({ children, className }: Props) {
+export function AuthGuard({ children, allowedRoles, className }: Props) {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const didCheck = useRef(false);
@@ -26,8 +24,17 @@ export function AuthGuard({ children, className }: Props) {
       router.replace('/login');
       return;
     }
+
+    const user = getUser();
+    const role = parseUserRole(user?.role);
+
+    if (allowedRoles && !allowedRoles.includes(role)) {
+      router.replace(getHomePath(role));
+      return;
+    }
+
     setReady(true);
-  }, [router]);
+  }, [router, allowedRoles]);
 
   if (!ready) {
     return (
