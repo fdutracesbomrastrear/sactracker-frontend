@@ -22,8 +22,7 @@ function renderFormattedLine(line: string, fromMe: boolean) {
 
   const parts = line.split(URL_REGEX);
   return parts.map((part, i) => {
-    if (URL_REGEX.test(part)) {
-      URL_REGEX.lastIndex = 0;
+    if (part.startsWith('http://') || part.startsWith('https://')) {
       const label =
         part.length > 48 ? `${part.slice(0, 40)}…${part.slice(-8)}` : part;
       return (
@@ -39,7 +38,6 @@ function renderFormattedLine(line: string, fromMe: boolean) {
       );
     }
 
-    URL_REGEX.lastIndex = 0;
     const boldParts = part.split(/(\*[^*]+\*)/g);
     return boldParts.map((seg, j) => {
       if (seg.startsWith('*') && seg.endsWith('*')) {

@@ -349,10 +349,10 @@ export default function InboxPage() {
             <button
               type="button"
               onClick={() => setFilter('OPEN')}
-              className={`px-4 py-1.5 text-sm font-semibold rounded-full ${
+                    className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors ${
                 filter === 'OPEN'
-                  ? 'bg-blue-50 text-blue-600 border border-blue-100'
-                  : 'text-slate-500 hover:bg-slate-50'
+                  ? 'bg-purple-950 text-white shadow-sm'
+                  : 'text-slate-500 hover:bg-slate-100'
               }`}
             >
               Abertos
@@ -360,10 +360,10 @@ export default function InboxPage() {
             <button
               type="button"
               onClick={() => setFilter('PENDING')}
-              className={`px-4 py-1.5 text-sm font-medium rounded-full ${
+                    className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors ${
                 filter === 'PENDING'
-                  ? 'bg-blue-50 text-blue-600 border border-blue-100'
-                  : 'text-slate-500 hover:bg-slate-50'
+                  ? 'bg-purple-950 text-white shadow-sm'
+                  : 'text-slate-500 hover:bg-slate-100'
               }`}
             >
               Pendentes
@@ -387,10 +387,10 @@ export default function InboxPage() {
                 type="button"
                 key={ticket.id}
                 onClick={() => setActiveTicket(ticket)}
-                className={`w-full text-left p-4 border-b border-slate-50 ${
+                className={`w-full text-left p-4 border-b border-slate-100/80 transition-colors ${
                   isActive
-                    ? 'bg-blue-50/50 border-l-4 border-l-blue-600'
-                    : 'bg-white border-l-4 border-l-transparent hover:bg-slate-50'
+                    ? 'bg-violet-50/90 border-l-[3px] border-l-purple-700'
+                    : 'bg-white border-l-[3px] border-l-transparent hover:bg-slate-50/80'
                 }`}
               >
                 <div className="flex justify-between items-center mb-1">
@@ -430,9 +430,9 @@ export default function InboxPage() {
           </div>
         ) : (
           <>
-            <div className="h-20 border-b border-slate-200 bg-white flex items-center justify-between px-6 shrink-0">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 border border-blue-200 rounded-full flex items-center justify-center font-bold text-blue-700 text-lg">
+            <div className="h-[4.5rem] border-b border-slate-200/80 bg-white/90 backdrop-blur-md flex items-center justify-between px-6 shrink-0 shadow-sm">
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="w-11 h-11 bg-gradient-to-br from-violet-100 to-purple-200 ring-2 ring-white shadow-md rounded-full flex items-center justify-center font-bold text-purple-800 text-base shrink-0">
                   {activeTicket.contact.name.charAt(0)}
                 </div>
                 <div>
@@ -495,7 +495,7 @@ export default function InboxPage() {
                   key={msg.id}
                   className={`flex w-full ${msg.fromMe ? 'justify-end' : 'justify-start'}`}
                 >
-                  <motion.div
+                  <div
                     className={`relative max-w-[min(100%,32rem)] px-4 py-3 shadow-md ${
                       msg.fromMe
                         ? 'bg-gradient-to-br from-violet-600 to-purple-800 text-white rounded-2xl rounded-br-md shadow-purple-900/15'
@@ -522,17 +522,18 @@ export default function InboxPage() {
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="p-4 bg-white border-t border-slate-200 shrink-0">
+            <div className="p-4 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shrink-0 shadow-[0_-4px_24px_rgba(15,23,42,0.06)]">
               {selectedFile && (
-                <div className="mb-2 flex items-center gap-2 text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
-                  <span className="truncate flex-1">📎 {selectedFile.name}</span>
+                <div className="mb-3 flex items-center gap-3 text-sm text-slate-700 bg-violet-50/80 ring-1 ring-violet-100 rounded-xl px-3 py-2.5">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-base shadow-sm">📎</span>
+                  <span className="truncate flex-1 font-medium">{selectedFile.name}</span>
                   <button
                     type="button"
                     onClick={() => {
                       setSelectedFile(null);
                       if (fileInputRef.current) fileInputRef.current.value = '';
                     }}
-                    className="text-red-500 hover:text-red-700 text-xs font-semibold shrink-0"
+                    className="text-xs font-medium text-red-600 hover:text-red-700 px-2 py-1 rounded-md hover:bg-red-50 shrink-0"
                   >
                     Remover
                   </button>
@@ -545,16 +546,16 @@ export default function InboxPage() {
                 accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
                 onChange={handleFilePick}
               />
-              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-2xl p-2 pr-3">
+              <div className="flex items-end gap-2 rounded-2xl bg-slate-50 ring-1 ring-slate-200/80 p-1.5 pl-2 shadow-inner">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={sending}
                   title="Anexar arquivo"
-                  className="p-2.5 text-slate-500 hover:text-purple-700 hover:bg-white rounded-xl disabled:opacity-50"
+                  className="mb-0.5 p-2.5 text-slate-400 hover:text-purple-700 hover:bg-white rounded-xl transition-colors disabled:opacity-50"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                   </svg>
                 </button>
                 <input
@@ -563,20 +564,20 @@ export default function InboxPage() {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && void handleSend()}
                   placeholder={selectedFile ? 'Legenda opcional...' : 'Digite sua mensagem...'}
-                  className="flex-1 bg-transparent border-none focus:outline-none text-slate-700 px-2"
+                  className="flex-1 min-h-[44px] py-2.5 bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400 text-[15px]"
                   disabled={sending}
                 />
                 <button
                   type="button"
                   onClick={() => void handleSend()}
                   disabled={sending || (!input.trim() && !selectedFile)}
-                  className="px-6 py-3 bg-amber-400 hover:bg-amber-500 text-purple-950 font-bold rounded-xl disabled:opacity-50"
+                  className="mb-0.5 shrink-0 px-5 py-2.5 bg-gradient-to-b from-amber-400 to-amber-500 text-purple-950 text-sm font-semibold rounded-xl shadow-sm shadow-amber-900/15 hover:from-amber-300 hover:to-amber-400 disabled:opacity-45 disabled:shadow-none transition-all"
                 >
-                  {sending ? '...' : 'Enviar'}
+                  {sending ? 'Enviando…' : 'Enviar'}
                 </button>
               </div>
-              <p className="text-[10px] text-slate-400 mt-1.5 px-1">
-                Imagens, PDF, documentos, áudio e vídeo (até 16 MB)
+              <p className="text-[10px] text-slate-400 mt-2 px-2 text-center">
+                Imagens, PDF, documentos, áudio e vídeo · até 16 MB
               </p>
             </div>
           </>
