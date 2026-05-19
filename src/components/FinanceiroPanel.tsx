@@ -200,8 +200,14 @@ export function FinanceiroPanel({
               <button
                 type="button"
                 onClick={() => {
-                  void navigator.clipboard.writeText(f.pixCopiaCola!);
-                  setFeedback('PIX copiado para a área de transferência');
+                  void navigator.clipboard
+                    .writeText(f.pixCopiaCola!)
+                    .then(() => {
+                      setFeedback('PIX copiado para a área de transferência');
+                    })
+                    .catch(() => {
+                      setFeedback('Não foi possível copiar o PIX. Verifique as permissões do navegador.');
+                    });
                 }}
                 className="text-[10px] font-semibold border border-slate-200 bg-white px-2 py-1 rounded-lg hover:bg-slate-50"
               >

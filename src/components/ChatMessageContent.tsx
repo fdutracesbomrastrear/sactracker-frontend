@@ -21,21 +21,21 @@ function renderFormattedLine(line: string, fromMe: boolean) {
     : 'text-violet-600 underline decoration-violet-200 underline-offset-2 hover:text-violet-800 break-all';
 
   const parts = line.split(URL_REGEX);
-  return parts.map((part, i) => {
+  return parts.flatMap((part, i) => {
     if (part.startsWith('http://') || part.startsWith('https://')) {
       const label =
         part.length > 48 ? `${part.slice(0, 40)}…${part.slice(-8)}` : part;
-      return (
+      return [
         <a
-          key={`${i}-${part.slice(0, 12)}`}
+          key={`url-${i}`}
           href={part}
           target="_blank"
           rel="noreferrer"
           className={linkClass}
         >
           {label}
-        </a>
-      );
+        </a>,
+      ];
     }
 
     const boldParts = part.split(/(\*[^*]+\*)/g);
