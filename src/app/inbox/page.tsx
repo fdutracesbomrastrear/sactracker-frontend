@@ -423,7 +423,7 @@ export default function InboxPage() {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col bg-[#F8FAFC] min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 bg-[#e8edf4] bg-[radial-gradient(circle_at_1px_1px,rgba(88,28,135,0.06)_1px,transparent_0)] bg-[length:24px_24px]">
         {!activeTicket ? (
           <div className="flex-1 flex items-center justify-center text-slate-400">
             Selecione um atendimento ou aguarde novas mensagens
