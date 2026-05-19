@@ -1,29 +1,43 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { login } from '@/lib/api';
+import { isAuthenticated, setSession } from '@/lib/auth';
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isAuthenticated()) {
+      router.replace('/inbox');
+    }
+  }, [router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const { token, user } = await login(email, password);
+      setSession(token, user);
       router.push('/inbox');
-    }, 1000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao entrar');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-purple-950 relative overflow-hidden">
-      {/* Efeitos de fundo para dar um tom "premium" */}
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-[128px] opacity-50 animate-blob"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-amber-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-30 animate-blob animation-delay-2000"></div>
+      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-[128px] opacity-50" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-amber-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-30" />
 
       <div className="relative w-full max-w-md rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 p-8 shadow-2xl">
         <div className="mb-8 text-center">
@@ -37,6 +51,12 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
+          {error && (
+            <p className="text-sm text-red-300 bg-red-500/20 border border-red-400/30 rounded-xl px-4 py-3">
+              {error}
+            </p>
+          )}
+
           <div>
             <label className="mb-2 block text-sm font-medium text-purple-100">
               E-mail
@@ -68,11 +88,15 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/30 transition-all hover:scale-[1.02] hover:shadow-blue-500/50 disabled:opacity-70 disabled:hover:scale-100"
+            className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/30 transition-all hover:scale-[1.02] disabled:opacity-70 disabled:hover:scale-100"
           >
             {loading ? 'Entrando...' : 'Acessar Painel'}
           </button>
         </form>
+
+        <p className="mt-6 text-center text-xs text-purple-300/70">
+          Primeiro acesso? Rode <code className="text-amber-300">npm run db:seed</code> no backend
+        </p>
       </div>
     </div>
   );
