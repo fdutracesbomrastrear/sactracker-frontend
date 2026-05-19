@@ -14,7 +14,6 @@ import { clearSession, getToken, getUser } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FinanceiroPanel } from '@/components/FinanceiroPanel';
-import { formatarTextoBoleto } from '@/lib/financeiro';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
 
@@ -189,6 +188,20 @@ export default function InboxPage() {
   const handleLogout = () => {
     clearSession();
     router.replace('/login');
+  };
+
+  const handleEnviarBoletoNoChat = async (texto: string) => {
+    if (!activeTicket) return;
+    setSending(true);
+    setError(null);
+    try {
+      const msg = await sendMessage(activeTicket.id, texto);
+      setMessages((prev) => appendMessage(prev, msg));
+    } catch {
+      setError('Erro ao enviar boleto no chat.');
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleResolve = async () => {
@@ -385,13 +398,11 @@ export default function InboxPage() {
         )}
       </div>
 
-      <div className="w-80 border-l border-slate-200 bg-white flex flex-col shrink-0 overflow-y-auto">
-        <div className="p-6 border-b border-slate-100">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-purple-900">
-            Telemetria
-          </h3>
-          <p className="text-xs text-slate-500 mt-1">Integração em breve (Fase 3)</p>
-        </div>
+      <div className="w-80 border-l border-slate-200 bg-white flex flex-col shrink-0 min-h-0">
+        <FinanceiroPanel
+          compact
+          onEnviarNoChat={activeTicket ? handleEnviarBoletoNoChat : undefined}
+        />
       </div>
     </div>
   );
