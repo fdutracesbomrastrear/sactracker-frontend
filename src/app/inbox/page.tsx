@@ -437,20 +437,20 @@ export default function InboxPage() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-slate-800 text-lg">
+                    <h3 className="font-semibold text-slate-900 text-base truncate max-w-[200px] sm:max-w-xs">
                       {activeTicket.contact.name}
                     </h3>
                     <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
                         activeTicket.mode === 'HUMAN'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-emerald-100 text-emerald-800'
+                          ? 'bg-violet-100 text-violet-700 ring-1 ring-violet-200/60'
+                          : 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/60'
                       }`}
                     >
                       {activeTicket.mode === 'HUMAN' ? 'Você' : 'Bot Gina'}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500">{activeTicket.contact.phone}</p>
+                  <p className="text-xs text-slate-500 tabular-nums">{activeTicket.contact.phone}</p>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 justify-end">
