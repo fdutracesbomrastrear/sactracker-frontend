@@ -312,13 +312,22 @@ export default function InboxPage() {
                   <p className="text-xs text-slate-500">{activeTicket.contact.phone}</p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={handleResolve}
-                className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold text-sm rounded-xl"
-              >
-                Resolver Ticket
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="px-4 py-2.5 bg-white border border-slate-200 text-slate-600 font-semibold text-sm rounded-xl hover:bg-slate-50"
+                >
+                  Sair
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResolve}
+                  className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold text-sm rounded-xl"
+                >
+                  Resolver Ticket
+                </button>
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
