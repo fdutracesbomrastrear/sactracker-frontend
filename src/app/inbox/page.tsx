@@ -453,52 +453,53 @@ export default function InboxPage() {
                   <p className="text-xs text-slate-500 tabular-nums">{activeTicket.contact.phone}</p>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2 justify-end">
+              <div className="flex flex-wrap items-center gap-2 justify-end shrink-0">
                 {activeTicket.mode === 'BOT' ? (
                   <button
                     type="button"
                     onClick={() => void handleAssume()}
-                    className="px-4 py-2.5 bg-emerald-600 text-white font-semibold text-sm rounded-xl hover:bg-emerald-500"
+                    className="px-3.5 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg shadow-sm shadow-emerald-900/20 hover:bg-emerald-500 transition-colors"
                   >
-                    Assumir atendimento
+                    Assumir
                   </button>
                 ) : (
                   <button
                     type="button"
                     onClick={() => void handleReleaseBot()}
-                    className="px-4 py-2.5 bg-white border border-emerald-300 text-emerald-800 font-semibold text-sm rounded-xl hover:bg-emerald-50"
+                    className="px-3.5 py-2 bg-white text-emerald-800 text-sm font-medium rounded-lg ring-1 ring-emerald-200 hover:bg-emerald-50 transition-colors"
                   >
                     Devolver ao bot
                   </button>
                 )}
                 <button
                   type="button"
-                  onClick={handleLogout}
-                  className="px-4 py-2.5 bg-white border border-slate-200 text-slate-600 font-semibold text-sm rounded-xl hover:bg-slate-50"
+                  onClick={handleResolve}
+                  className="px-3.5 py-2 bg-purple-950 text-white text-sm font-medium rounded-lg shadow-sm shadow-purple-950/25 hover:bg-purple-900 transition-colors"
                 >
-                  Sair
+                  Resolver
                 </button>
                 <button
                   type="button"
-                  onClick={handleResolve}
-                  className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold text-sm rounded-xl"
+                  onClick={handleLogout}
+                  className="px-3.5 py-2 text-slate-500 text-sm font-medium rounded-lg hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                  title="Sair"
                 >
-                  Resolver Ticket
+                  Sair
                 </button>
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 space-y-3">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
-                  className={`flex max-w-[75%] ${msg.fromMe ? 'ml-auto justify-end' : ''}`}
+                  className={`flex w-full ${msg.fromMe ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div
-                    className={`p-4 rounded-2xl shadow-sm ${
+                  <motion.div
+                    className={`relative max-w-[min(100%,32rem)] px-4 py-3 shadow-md ${
                       msg.fromMe
-                        ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-tr-sm'
-                        : 'bg-white border border-slate-200 text-slate-700 rounded-tl-sm'
+                        ? 'bg-gradient-to-br from-violet-600 to-purple-800 text-white rounded-2xl rounded-br-md shadow-purple-900/15'
+                        : 'bg-white text-slate-800 rounded-2xl rounded-bl-md ring-1 ring-slate-200/90 shadow-slate-200/50'
                     }`}
                   >
                     <ChatMessageContent
@@ -509,8 +510,8 @@ export default function InboxPage() {
                       fromMe={msg.fromMe}
                     />
                     <span
-                      className={`text-[11px] mt-2 block ${
-                        msg.fromMe ? 'text-blue-200 text-right' : 'text-slate-400'
+                      className={`text-[10px] mt-2 block tabular-nums ${
+                        msg.fromMe ? 'text-violet-200/90 text-right' : 'text-slate-400'
                       }`}
                     >
                       {formatTime(msg.createdAt)}
