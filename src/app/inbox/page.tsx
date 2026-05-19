@@ -10,6 +10,8 @@ import {
   TicketItem,
   updateTicketStatus,
 } from '@/lib/api';
+import { clearSession, getToken, getUser } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
 
@@ -22,7 +24,22 @@ function formatTime(dateStr: string) {
   return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 }
 
+function dedupeById<T extends { id: string }>(items: T[]): T[] {
+  const map = new Map<string, T>();
+  for (const item of items) {
+    map.set(item.id, item);
+  }
+  return Array.from(map.values());
+}
+
+function appendMessage(prev: ChatMessage[], message: ChatMessage): ChatMessage[] {
+  if (prev.some((m) => m.id === message.id)) return prev;
+  return [...prev, message];
+}
+
 export default function InboxPage() {
+  const router = useRouter();
+  const user = getUser();
   const [filter, setFilter] = useState<'OPEN' | 'PENDING'>('OPEN');
   const [tickets, setTickets] = useState<TicketItem[]>([]);
   const [activeTicket, setActiveTicket] = useState<TicketItem | null>(null);
@@ -33,16 +50,21 @@ export default function InboxPage() {
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const activeTicketIdRef = useRef<string | null>(null);
+  const filterRef = useRef(filter);
 
   useEffect(() => {
     activeTicketIdRef.current = activeTicket?.id ?? null;
   }, [activeTicket]);
 
+  useEffect(() => {
+    filterRef.current = filter;
+  }, [filter]);
+
   const loadTickets = useCallback(async () => {
     try {
       setError(null);
       const data = await fetchTickets(filter);
-      setTickets(data);
+      setTickets(dedupeById(data));
       setActiveTicket((prev) => {
         if (prev && data.some((t) => t.id === prev.id)) {
           return data.find((t) => t.id === prev.id) ?? data[0] ?? null;
@@ -59,7 +81,7 @@ export default function InboxPage() {
   const loadMessages = useCallback(async (ticketId: string) => {
     try {
       const data = await fetchMessages(ticketId);
-      setMessages(data);
+      setMessages(dedupeById(data));
     } catch {
       setMessages([]);
     }
@@ -79,15 +101,22 @@ export default function InboxPage() {
   }, [messages]);
 
   useEffect(() => {
-    const socket: Socket = io(WS_URL, { transports: ['websocket', 'polling'] });
+    const token = getToken();
+    if (!token) return;
+
+    const socket: Socket = io(WS_URL, {
+      transports: ['websocket', 'polling'],
+      auth: { token },
+    });
 
     socket.on('nova_mensagem', (payload: {
       ticket: { id: string; status: string };
       message: ChatMessage;
       contact: { id: string; name: string; phone: string };
     }) => {
+      const currentFilter = filterRef.current;
+
       setTickets((prev) => {
-        const exists = prev.find((t) => t.id === payload.ticket.id);
         const updated: TicketItem = {
           id: payload.ticket.id,
           status: payload.ticket.status,
@@ -97,41 +126,43 @@ export default function InboxPage() {
           unread: payload.message.fromMe ? 0 : 1,
         };
 
+        const exists = prev.find((t) => t.id === payload.ticket.id);
+        let next: TicketItem[];
+
         if (exists) {
-          return prev
-            .map((t) => (t.id === payload.ticket.id ? { ...t, ...updated } : t))
-            .sort(
-              (a, b) =>
-                new Date(b.lastMessageAt).getTime() -
-                new Date(a.lastMessageAt).getTime()
-            );
+          next = prev.map((t) =>
+            t.id === payload.ticket.id ? { ...t, ...updated } : t
+          );
+        } else if (payload.ticket.status === currentFilter) {
+          next = [updated, ...prev];
+        } else {
+          return prev;
         }
 
-        if (payload.ticket.status === filter) {
-          return [updated, ...prev];
-        }
-        return prev;
+        return dedupeById(next).sort(
+          (a, b) =>
+            new Date(b.lastMessageAt).getTime() -
+            new Date(a.lastMessageAt).getTime()
+        );
       });
 
       if (activeTicketIdRef.current === payload.ticket.id) {
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === payload.message.id)) return prev;
-          return [...prev, payload.message];
-        });
+        setMessages((prev) => appendMessage(prev, payload.message));
       }
     });
 
     return () => {
+      socket.off('nova_mensagem');
       socket.disconnect();
     };
-  }, [filter]);
+  }, []);
 
   const handleSend = async () => {
     if (!activeTicket || !input.trim() || sending) return;
     setSending(true);
     try {
       const saved = await sendMessage(activeTicket.id, input.trim());
-      setMessages((prev) => [...prev, saved]);
+      setMessages((prev) => appendMessage(prev, saved));
       setInput('');
       setTickets((prev) =>
         prev.map((t) =>
@@ -150,6 +181,11 @@ export default function InboxPage() {
     } finally {
       setSending(false);
     }
+  };
+
+  const handleLogout = () => {
+    clearSession();
+    router.replace('/login');
   };
 
   const handleResolve = async () => {
