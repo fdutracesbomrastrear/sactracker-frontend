@@ -81,6 +81,49 @@ export async function fetchFinanceiroPorDocumento(
   return apiFetch(`${API_URL}/api/financeiro/consulta/${doc}`);
 }
 
+export type EnviarWhatsappTipo = 'boleto' | 'pix';
+
+export async function enviarFaturaWhatsapp(params: {
+  telefone: string;
+  tipo: EnviarWhatsappTipo;
+  fatura: FaturaItem;
+  nomeCliente: string;
+  ticketId?: string;
+}): Promise<{ ok: boolean; mensagens: number }> {
+  const token = getToken();
+  const res = await fetch(`${API_URL}/api/financeiro/enviar-whatsapp`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(params),
+  });
+
+  if (res.status === 401) {
+    clearSession();
+    if (typeof window !== 'undefined') window.location.href = '/login';
+    throw new Error('Sessão expirada');
+  }
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'Erro ao enviar WhatsApp');
+  }
+
+  return res.json();
+}
+
+export function resolverTelefoneCliente(
+  grupo: ClienteFinanceiroGrupo,
+  telefoneAtivo?: string
+): string | null {
+  const candidato = telefoneAtivo || grupo.pessoa.celular || grupo.pessoa.telefone;
+  if (!candidato) return null;
+  const digits = candidato.replace(/\D/g, '');
+  return digits.length >= 10 ? candidato : null;
+}
+
 export function formatarTextoBoleto(fatura: FaturaItem, nomeCliente: string) {
   const linhas = [
     `Segue sua fatura:`,

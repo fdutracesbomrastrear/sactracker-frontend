@@ -4,16 +4,22 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   ClienteFinanceiroGrupo,
+  enviarFaturaWhatsapp,
+  EnviarWhatsappTipo,
   fetchFinanceiroFaturas,
   fetchFinanceiroPorDocumento,
   formatarTextoBoleto,
   FaturaItem,
+  resolverTelefoneCliente,
 } from '@/lib/financeiro';
 
 type FinanceiroPanelProps = {
   compact?: boolean;
   documentoInicial?: string;
+  telefoneAtivo?: string;
+  ticketId?: string;
   onEnviarNoChat?: (texto: string) => void;
+  onMensagensEnviadas?: () => void;
 };
 
 function statusBadgeClass(status: string) {
@@ -26,7 +32,10 @@ function statusBadgeClass(status: string) {
 export function FinanceiroPanel({
   compact = false,
   documentoInicial = '',
+  telefoneAtivo,
+  ticketId,
   onEnviarNoChat,
+  onMensagensEnviadas,
 }: FinanceiroPanelProps) {
   const [busca, setBusca] = useState('');
   const [buscaDeb, setBuscaDeb] = useState('');
@@ -37,6 +46,8 @@ export function FinanceiroPanel({
   const [total, setTotal] = useState(0);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [enviandoWpp, setEnviandoWpp] = useState<string | null>(null);
 
   useEffect(() => {
     const t = window.setTimeout(() => setBuscaDeb(busca.trim()), 400);
@@ -91,7 +102,47 @@ export function FinanceiroPanel({
 
   const gruposExibir = grupoUnico ? [grupoUnico] : dados;
 
-  function renderFatura(f: FaturaItem, nome: string) {
+  async function dispararWhatsapp(
+    grupo: ClienteFinanceiroGrupo,
+    f: FaturaItem,
+    tipo: EnviarWhatsappTipo
+  ) {
+    const telefone = resolverTelefoneCliente(grupo, telefoneAtivo);
+    if (!telefone) {
+      setErro('Cliente sem telefone cadastrado na Rastro System');
+      return;
+    }
+
+    const chave = `${f.id}-${tipo}`;
+    setEnviandoWpp(chave);
+    setErro(null);
+    setFeedback(null);
+    try {
+      await enviarFaturaWhatsapp({
+        telefone,
+        tipo,
+        fatura: f,
+        nomeCliente: grupo.pessoa.nome,
+        ticketId,
+      });
+      setFeedback(
+        tipo === 'pix'
+          ? 'PIX enviado no WhatsApp do cliente'
+          : 'Boleto enviado no WhatsApp do cliente'
+      );
+      onMensagensEnviadas?.();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Erro ao enviar WhatsApp');
+    } finally {
+      setEnviandoWpp(null);
+    }
+  }
+
+  function renderFatura(f: FaturaItem, grupo: ClienteFinanceiroGrupo) {
+    const telefone = resolverTelefoneCliente(grupo, telefoneAtivo);
+    const nome = grupo.pessoa.nome;
+    const enviandoBoleto = enviandoWpp === `${f.id}-boleto`;
+    const enviandoPix = enviandoWpp === `${f.id}-pix`;
     return (
       <div
         key={f.id}
@@ -126,14 +177,37 @@ export function FinanceiroPanel({
               PDF
             </a>
           )}
+          <button
+            type="button"
+            disabled={!telefone || !!enviandoWpp}
+            title={telefone ? 'Enviar resumo do boleto no WhatsApp do cliente' : 'Sem telefone cadastrado'}
+            onClick={() => void dispararWhatsapp(grupo, f, 'boleto')}
+            className="text-[10px] font-semibold bg-emerald-600 text-white px-2 py-1 rounded-lg hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {enviandoBoleto ? '...' : 'WhatsApp'}
+          </button>
           {f.pixCopiaCola && (
-            <button
-              type="button"
-              onClick={() => navigator.clipboard.writeText(f.pixCopiaCola!)}
-              className="text-[10px] font-semibold border border-slate-200 bg-white px-2 py-1 rounded-lg hover:bg-slate-50"
-            >
-              Copiar PIX
-            </button>
+            <>
+              <button
+                type="button"
+                disabled={!telefone || !!enviandoWpp}
+                title={telefone ? 'Enviar PIX copia e cola no WhatsApp' : 'Sem telefone cadastrado'}
+                onClick={() => void dispararWhatsapp(grupo, f, 'pix')}
+                className="text-[10px] font-semibold bg-teal-600 text-white px-2 py-1 rounded-lg hover:bg-teal-500 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {enviandoPix ? '...' : 'PIX WhatsApp'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  void navigator.clipboard.writeText(f.pixCopiaCola!);
+                  setFeedback('PIX copiado para a área de transferência');
+                }}
+                className="text-[10px] font-semibold border border-slate-200 bg-white px-2 py-1 rounded-lg hover:bg-slate-50"
+              >
+                Copiar PIX
+              </button>
+            </>
           )}
           {onEnviarNoChat && (
             <button
@@ -141,7 +215,7 @@ export function FinanceiroPanel({
               onClick={() => onEnviarNoChat(formatarTextoBoleto(f, nome))}
               className="text-[10px] font-semibold bg-amber-400 text-purple-950 px-2 py-1 rounded-lg hover:bg-amber-500"
             >
-              Enviar no chat
+              Chat ativo
             </button>
           )}
         </div>
@@ -227,6 +301,11 @@ export function FinanceiroPanel({
             {erro}
           </p>
         )}
+        {feedback && (
+          <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg p-2">
+            {feedback}
+          </p>
+        )}
         {carregando && (
           <p className="text-xs text-slate-400 text-center">Consultando Rastro System…</p>
         )}
@@ -264,7 +343,7 @@ export function FinanceiroPanel({
               {grupo.faturas.length === 0 ? (
                 <p className="text-xs italic text-slate-400">Sem faturas.</p>
               ) : (
-                grupo.faturas.map((f) => renderFatura(f, grupo.pessoa.nome))
+                grupo.faturas.map((f) => renderFatura(f, grupo))
               )}
             </div>
           </div>

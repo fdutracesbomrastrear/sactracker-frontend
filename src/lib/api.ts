@@ -5,6 +5,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 export type TicketItem = {
   id: string;
   status: string;
+  mode: 'BOT' | 'HUMAN';
   contact: { id: string; name: string; phone: string };
   lastMessage: string;
   lastMessageAt: string;
@@ -103,5 +104,21 @@ export async function updateTicketStatus(ticketId: string, status: string) {
     body: JSON.stringify({ status }),
   });
   if (!res.ok) throw new Error('Falha ao atualizar ticket');
+  return res.json();
+}
+
+export async function assumeTicket(ticketId: string) {
+  const res = await apiFetch(`${API_URL}/api/tickets/${ticketId}/assume`, {
+    method: 'POST',
+  });
+  if (!res.ok) throw new Error('Falha ao assumir atendimento');
+  return res.json();
+}
+
+export async function releaseTicketToBot(ticketId: string) {
+  const res = await apiFetch(`${API_URL}/api/tickets/${ticketId}/release-bot`, {
+    method: 'POST',
+  });
+  if (!res.ok) throw new Error('Falha ao devolver ao bot');
   return res.json();
 }
