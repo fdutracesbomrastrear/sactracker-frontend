@@ -6,9 +6,12 @@ import {
   CobrancaResultado,
   CobrancaStatus,
   dispararRotinaCobranca,
+  dispararVencemEm2Dias,
+  dispararFaturaUnicaPendente,
   dispararVencemHoje,
   dispararVencidosOntem,
   fetchCobrancaStatus,
+  simularVencemEm2Dias,
   simularVencemHoje,
   simularVencidosOntem,
   SimulacaoCobranca,
@@ -113,33 +116,14 @@ export default function CobrancaPage() {
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-3">
           <h2 className="text-sm font-bold text-slate-800">Disparos reais</h2>
           <p className="text-xs text-slate-500">
-            Intervalo de ~70–90s entre cada envio para evitar bloqueio no WhatsApp.
+            Lembrete → boleto → PIX em bolha separada. ~70–90s entre clientes.
           </p>
           <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              disabled={!!acao}
-              onClick={() => void executar('rotina', dispararRotinaCobranca)}
-              className="text-xs font-bold bg-purple-950 text-white px-4 py-2 rounded-lg disabled:opacity-50"
-            >
-              {acao === 'rotina' ? '...' : 'Rotina inadimplentes'}
-            </button>
-            <button
-              type="button"
-              disabled={!!acao}
-              onClick={() => void executar('ontem', dispararVencidosOntem)}
-              className="text-xs font-bold bg-amber-600 text-white px-4 py-2 rounded-lg disabled:opacity-50"
-            >
-              {acao === 'ontem' ? '...' : 'Vencidos ontem'}
-            </button>
-            <button
-              type="button"
-              disabled={!!acao}
-              onClick={() => void executar('hoje', dispararVencemHoje)}
-              className="text-xs font-bold bg-emerald-600 text-white px-4 py-2 rounded-lg disabled:opacity-50"
-            >
-              {acao === 'hoje' ? '...' : 'Vencem hoje'}
-            </button>
+            <button type="button" disabled={!!acao} onClick={() => void executar('d2', dispararVencemEm2Dias)} className="text-xs font-bold bg-blue-600 text-white px-4 py-2 rounded-lg disabled:opacity-50">{acao === 'd2' ? '...' : 'D-2'}</button>
+            <button type="button" disabled={!!acao} onClick={() => void executar('hoje', dispararVencemHoje)} className="text-xs font-bold bg-emerald-600 text-white px-4 py-2 rounded-lg disabled:opacity-50">{acao === 'hoje' ? '...' : 'D0 hoje'}</button>
+            <button type="button" disabled={!!acao} onClick={() => void executar('ontem', dispararVencidosOntem)} className="text-xs font-bold bg-amber-600 text-white px-4 py-2 rounded-lg disabled:opacity-50">{acao === 'ontem' ? '...' : 'D+1 ontem'}</button>
+            <button type="button" disabled={!!acao} onClick={() => void executar('unica', dispararFaturaUnicaPendente)} className="text-xs font-bold bg-teal-600 text-white px-4 py-2 rounded-lg disabled:opacity-50">{acao === 'unica' ? '...' : '1 fatura'}</button>
+            <button type="button" disabled={!!acao} onClick={() => void executar('rotina', dispararRotinaCobranca)} className="text-xs font-bold bg-purple-950 text-white px-4 py-2 rounded-lg disabled:opacity-50">{acao === 'rotina' ? '...' : 'Várias vencidas'}</button>
           </div>
         </div>
 
@@ -147,22 +131,9 @@ export default function CobrancaPage() {
           <h2 className="text-sm font-bold text-slate-800">Simulação (dry-run)</h2>
           <p className="text-xs text-slate-500">Não envia mensagens — apenas lista quem receberia.</p>
           <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              disabled={!!acao}
-              onClick={() => void executar('sim-ontem', simularVencidosOntem)}
-              className="text-xs font-semibold border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-50 disabled:opacity-50"
-            >
-              Simular vencidos ontem
-            </button>
-            <button
-              type="button"
-              disabled={!!acao}
-              onClick={() => void executar('sim-hoje', simularVencemHoje)}
-              className="text-xs font-semibold border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-50 disabled:opacity-50"
-            >
-              Simular vencem hoje
-            </button>
+            <button type="button" disabled={!!acao} onClick={() => void executar('sim-d2', simularVencemEm2Dias)} className="text-xs font-semibold border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-50 disabled:opacity-50">Simular D-2</button>
+            <button type="button" disabled={!!acao} onClick={() => void executar('sim-hoje', simularVencemHoje)} className="text-xs font-semibold border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-50 disabled:opacity-50">Simular D0</button>
+            <button type="button" disabled={!!acao} onClick={() => void executar('sim-ontem', simularVencidosOntem)} className="text-xs font-semibold border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-50 disabled:opacity-50">Simular D+1</button>
           </div>
         </div>
 

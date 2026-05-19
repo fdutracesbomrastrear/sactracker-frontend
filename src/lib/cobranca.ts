@@ -63,6 +63,18 @@ export function dispararVencidosOntem() {
   }) as Promise<CobrancaResultado>;
 }
 
+export function dispararVencemEm2Dias() {
+  return apiFetch(`${API_URL}/api/cobranca/vencem-em-2-dias`, {
+    method: 'POST',
+  }) as Promise<CobrancaResultado>;
+}
+
+export function dispararFaturaUnicaPendente() {
+  return apiFetch(`${API_URL}/api/cobranca/fatura-unica-pendente`, {
+    method: 'POST',
+  }) as Promise<CobrancaResultado>;
+}
+
 export function dispararVencemHoje() {
   return apiFetch(`${API_URL}/api/cobranca/vencem-hoje`, {
     method: 'POST',
@@ -71,6 +83,10 @@ export function dispararVencemHoje() {
 
 export function simularVencidosOntem() {
   return apiFetch(`${API_URL}/api/cobranca/simular/vencidos-ontem`) as Promise<SimulacaoCobranca>;
+}
+
+export function simularVencemEm2Dias() {
+  return apiFetch(`${API_URL}/api/cobranca/simular/vencem-em-2-dias`) as Promise<SimulacaoCobranca>;
 }
 
 export function simularVencemHoje() {
