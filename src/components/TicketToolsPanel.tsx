@@ -216,7 +216,7 @@ export function TicketToolsPanel({
                   onChange={(e) => setNotaBody(e.target.value)}
                   rows={3}
                   placeholder="Negociação, combinado com o cliente, próximos passos..."
-                  className="w-full text-sm rounded-lg border border-slate-200 px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-purple-200"
+                  className="w-full text-sm text-slate-900 bg-white rounded-lg border border-slate-200 px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-purple-200"
                 />
                 <label className="text-[11px] text-slate-500 block">
                   Retornar contato em (opcional)
@@ -225,7 +225,7 @@ export function TicketToolsPanel({
                   type="date"
                   value={notaFollowUp}
                   onChange={(e) => setNotaFollowUp(e.target.value)}
-                  className="w-full text-sm rounded-lg border border-slate-200 px-3 py-1.5"
+                  className="w-full text-sm text-slate-900 bg-white rounded-lg border border-slate-200 px-3 py-1.5"
                 />
                 <button
                   type="button"
@@ -297,13 +297,13 @@ export function TicketToolsPanel({
                   value={cpf}
                   onChange={(e) => setCpf(e.target.value)}
                   placeholder="Somente números"
-                  className="w-full text-sm rounded-lg border border-slate-200 px-3 py-2"
+                  className="w-full text-sm text-slate-900 bg-white rounded-lg border border-slate-200 px-3 py-2"
                 />
                 <label className="text-xs font-semibold text-slate-700">Contrato (opcional)</label>
                 <input
                   value={contrato}
                   onChange={(e) => setContrato(e.target.value)}
-                  className="w-full text-sm rounded-lg border border-slate-200 px-3 py-2"
+                  className="w-full text-sm text-slate-900 bg-white rounded-lg border border-slate-200 px-3 py-2"
                 />
                 <label className="text-xs font-semibold text-slate-700">
                   Retomar cobrança em
@@ -312,7 +312,7 @@ export function TicketToolsPanel({
                   type="date"
                   value={retomarEm}
                   onChange={(e) => setRetomarEm(e.target.value)}
-                  className="w-full text-sm rounded-lg border border-slate-200 px-3 py-2"
+                  className="w-full text-sm text-slate-900 bg-white rounded-lg border border-slate-200 px-3 py-2"
                 />
                 <label className="text-xs font-semibold text-slate-700">Observações</label>
                 <textarea

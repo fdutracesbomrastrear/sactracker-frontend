@@ -258,7 +258,7 @@ export function FinanceiroPanel({
             value={documento}
             onChange={(e) => setDocumento(e.target.value)}
             placeholder="CPF ou CNPJ do cliente"
-            className="flex-1 text-xs rounded-lg border border-slate-200 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
+            className="flex-1 text-xs text-slate-900 rounded-lg border border-slate-200 bg-white px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
           />
           <button
             type="button"
@@ -277,7 +277,7 @@ export function FinanceiroPanel({
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               placeholder="Buscar nome, CPF ou telefone…"
-              className="w-full text-xs rounded-lg border border-slate-200 px-2 py-1.5 mb-2 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
+              className="w-full text-xs text-slate-900 rounded-lg border border-slate-200 bg-white px-2 py-1.5 mb-2 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
             />
             <div className="flex gap-1 flex-wrap">
               {[

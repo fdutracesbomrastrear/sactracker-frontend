@@ -20,6 +20,8 @@ import { ChatMessageContent } from '@/components/ChatMessageContent';
 import { AppSidebar } from '@/components/AppSidebar';
 import { parseUserRole } from '@/lib/roles';
 import { TicketToolsPanel } from '@/components/TicketToolsPanel';
+import { usePanelSettings } from '@/components/PanelSettingsProvider';
+import { bubblePadding, fontSizeClass, messageGap } from '@/lib/panel-settings';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
 
@@ -49,6 +51,7 @@ export default function InboxPage() {
   const router = useRouter();
   const user = getUser();
   const userRole = parseUserRole(user?.role);
+  const { settings, openSettings } = usePanelSettings();
   const [filter, setFilter] = useState<'OPEN' | 'PENDING'>('OPEN');
   const [tickets, setTickets] = useState<TicketItem[]>([]);
   const [activeTicket, setActiveTicket] = useState<TicketItem | null>(null);
@@ -118,8 +121,9 @@ export default function InboxPage() {
   }, [activeTicket?.id]);
 
   useEffect(() => {
+    if (!settings.autoScroll) return;
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, settings.autoScroll]);
 
   useEffect(() => {
     const token = getToken();
@@ -405,7 +409,10 @@ export default function InboxPage() {
         </div>
       </div>
 
-      <div className="relative flex-1 flex flex-col min-w-0 overflow-hidden bg-[#e8edf4] bg-[radial-gradient(circle_at_1px_1px,rgba(88,28,135,0.06)_1px,transparent_0)] bg-[length:24px_24px]">
+      <div
+        className="relative flex-1 flex flex-col min-w-0 overflow-hidden bg-[radial-gradient(circle_at_1px_1px,rgba(88,28,135,0.06)_1px,transparent_0)] bg-[length:24px_24px]"
+        style={{ backgroundColor: settings.chatBg }}
+      >
         {!activeTicket ? (
           <div className="flex-1 flex items-center justify-center text-slate-400">
             Selecione um atendimento ou aguarde novas mensagens
@@ -453,6 +460,14 @@ export default function InboxPage() {
                     Devolver ao bot
                   </button>
                 )}
+                <button
+                  type="button"
+                  onClick={openSettings}
+                  className="px-3 py-2 bg-white text-slate-600 text-sm font-medium rounded-lg ring-1 ring-slate-200 hover:bg-slate-50 transition-colors"
+                  title="Configurações"
+                >
+                  ⚙
+                </button>
                 <div className="relative">
                   <button
                     type="button"
@@ -507,18 +522,29 @@ export default function InboxPage() {
               </div>
             </div>
 
-            <div className="relative z-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6 space-y-3">
+            <div
+              className={`relative z-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6 ${messageGap(settings.compactMode)}`}
+            >
               {messages.map((msg) => (
                 <div
                   key={msg.id}
                   className={`flex w-full ${msg.fromMe ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[min(100%,32rem)] px-4 py-3 shadow-md ${
-                      msg.fromMe
-                        ? 'bg-gradient-to-br from-violet-600 to-purple-800 text-white rounded-2xl rounded-br-md shadow-purple-900/15'
-                        : 'bg-white text-slate-800 rounded-2xl rounded-bl-md ring-1 ring-slate-200/90 shadow-slate-200/50'
+                    className={`max-w-[min(100%,32rem)] shadow-md rounded-2xl ${bubblePadding(settings.compactMode)} ${fontSizeClass(settings.fontSize)} ${
+                      msg.fromMe ? 'rounded-br-md' : 'rounded-bl-md ring-1 ring-slate-200/90 shadow-slate-200/50'
                     }`}
+                    style={
+                      msg.fromMe
+                        ? {
+                            background: `linear-gradient(to bottom right, ${settings.outgoingFrom}, ${settings.outgoingTo})`,
+                            color: settings.outgoingText,
+                          }
+                        : {
+                            backgroundColor: settings.incomingBg,
+                            color: settings.incomingText,
+                          }
+                    }
                   >
                     <ChatMessageContent
                       messageId={msg.id}
@@ -528,9 +554,8 @@ export default function InboxPage() {
                       fromMe={msg.fromMe}
                     />
                     <span
-                      className={`text-[10px] mt-2 block tabular-nums ${
-                        msg.fromMe ? 'text-violet-200/90 text-right' : 'text-slate-400'
-                      }`}
+                      className={`text-[10px] mt-2 block tabular-nums opacity-80 text-right`}
+                      style={msg.fromMe ? undefined : { textAlign: 'left' }}
                     >
                       {formatTime(msg.createdAt)}
                     </span>
@@ -580,9 +605,14 @@ export default function InboxPage() {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && void handleSend()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && settings.enterToSend && !e.shiftKey) {
+                      e.preventDefault();
+                      void handleSend();
+                    }
+                  }}
                   placeholder={selectedFile ? 'Legenda opcional...' : 'Digite sua mensagem...'}
-                  className="flex-1 min-h-[44px] py-2.5 bg-transparent border-none focus:outline-none text-slate-800 placeholder:text-slate-400 text-[15px]"
+                  className="flex-1 min-h-[44px] py-2.5 bg-transparent border-none focus:outline-none text-slate-900 caret-purple-700 placeholder:text-slate-400 text-[15px]"
                   disabled={sending}
                 />
                 <button
