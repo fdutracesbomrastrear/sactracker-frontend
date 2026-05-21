@@ -1,6 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
+import { extrairPlacaDoTexto } from '@/lib/placa';
 import {
   cancelCobrancaAgendamento,
   CobrancaAgendamentoItem,
@@ -149,6 +151,8 @@ export function TicketToolsPanel({
     }
   };
 
+  const placaSugerida = extrairPlacaDoTexto(contactName);
+
   return (
     <div className="absolute inset-0 z-50 flex justify-end">
       <button
@@ -158,6 +162,16 @@ export function TicketToolsPanel({
         onClick={onClose}
       />
       <div className="relative z-50 w-full max-w-md bg-white shadow-2xl border-l border-slate-200 flex flex-col h-full">
+        {placaSugerida ? (
+          <div className="px-4 py-2 border-b border-purple-100 bg-purple-50 shrink-0">
+            <Link
+              href={`/monitoramento?placa=${encodeURIComponent(placaSugerida)}`}
+              className="text-xs font-semibold text-purple-800 hover:underline"
+            >
+              Ver {placaSugerida} no monitoramento →
+            </Link>
+          </div>
+        ) : null}
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 shrink-0">
           <div>
             <h3 className="font-semibold text-slate-900 text-sm">Ferramentas</h3>

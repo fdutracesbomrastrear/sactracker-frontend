@@ -26,6 +26,14 @@ export function canAccessCobranca(role: UserRole): boolean {
   return true;
 }
 
+export function canAccessMonitoramento(role: UserRole): boolean {
+  return role === 'ATENDENTE' || role === 'FINANCEIRO' || role === 'ADMIN';
+}
+
+export function canEnviarComandoSms(role: UserRole): boolean {
+  return role === 'FINANCEIRO' || role === 'ADMIN';
+}
+
 export function roleLabel(role: UserRole): string {
   if (role === 'FINANCEIRO') return 'Financeiro';
   if (role === 'ADMIN') return 'Administrador';

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { VeiculosClienteLinks } from '@/components/VeiculosClienteLinks';
 import {
   ClienteFinanceiroGrupo,
   enviarFaturaWhatsapp,
@@ -348,6 +349,7 @@ export function FinanceiroPanel({
                 </span>
               )}
             </div>
+            <VeiculosClienteLinks nomeCliente={grupo.pessoa.nome} />
             <div className="p-3 space-y-2">
               {grupo.faturas.length === 0 ? (
                 <p className="text-xs italic text-slate-400">Sem faturas.</p>
