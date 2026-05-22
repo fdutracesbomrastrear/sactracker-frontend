@@ -1,8 +1,8 @@
-import { AuthGuard } from '@/components/AuthGuard';
+import { AuthGuard } from '@/modules/core/components/AuthGuard';
 
 export default function MonitoramentoLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AuthGuard allowedRoles={['ATENDENTE', 'FINANCEIRO', 'ADMIN']}>
+    <AuthGuard allowedPermissions={['MONITORAMENTO']}>
       {children}
     </AuthGuard>
   );

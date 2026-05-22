@@ -12,16 +12,19 @@ import {
   sendMessageMedia,
   TicketItem,
   updateTicketStatus,
-} from '@/lib/api';
-import { clearSession, getToken, getUser } from '@/lib/auth';
+} from '@/modules/core/lib/api';
+import { clearSession, getToken, getUser } from '@/modules/core/lib/auth';
 import { useRouter } from 'next/navigation';
-import { FinanceiroPanel } from '@/components/FinanceiroPanel';
-import { ChatMessageContent } from '@/components/ChatMessageContent';
-import { AppSidebar } from '@/components/AppSidebar';
-import { parseUserRole } from '@/lib/roles';
-import { TicketToolsPanel } from '@/components/TicketToolsPanel';
-import { usePanelSettings } from '@/components/PanelSettingsProvider';
-import { bubblePadding, fontSizeClass, messageGap } from '@/lib/panel-settings';
+import { FinanceiroPanel } from '@/modules/financeiro/components/FinanceiroPanel';
+import { ChatMessageContent } from '@/modules/inbox/components/ChatMessageContent';
+import { AppSidebar } from '@/modules/core/components/AppSidebar';
+import { parsePermissions, roleLabel } from '@/modules/core/lib/roles';
+import { TicketToolsPanel } from '@/modules/inbox/components/TicketToolsPanel';
+import { usePanelSettings } from '@/modules/core/hooks/PanelSettingsProvider';
+import { bubblePadding, fontSizeClass, messageGap } from '@/modules/core/lib/panel-settings';
+import { AuthGuard } from '@/modules/core/components/AuthGuard';
+import { playNotificationSound } from '@/modules/core/lib/sound';
+import { NewChatModal } from '@/modules/inbox/components/NewChatModal';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
 
@@ -50,7 +53,7 @@ function appendMessage(prev: ChatMessage[], message: ChatMessage): ChatMessage[]
 export default function InboxPage() {
   const router = useRouter();
   const user = getUser();
-  const userRole = parseUserRole(user?.role);
+  const permissions = parsePermissions(user?.permissions);
   const { settings, openSettings } = usePanelSettings();
   const [filter, setFilter] = useState<'OPEN' | 'PENDING'>('OPEN');
   const [tickets, setTickets] = useState<TicketItem[]>([]);
@@ -68,11 +71,18 @@ export default function InboxPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const activeTicketIdRef = useRef<string | null>(null);
+  const [isNewChatOpen, setIsNewChatOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const filterRef = useRef(filter);
+  const settingsRef = useRef(settings);
 
   useEffect(() => {
     activeTicketIdRef.current = activeTicket?.id ?? null;
   }, [activeTicket]);
+
+  useEffect(() => {
+    settingsRef.current = settings;
+  }, [settings]);
 
   useEffect(() => {
     filterRef.current = filter;
@@ -139,6 +149,10 @@ export default function InboxPage() {
       message: ChatMessage;
       contact: { id: string; name: string; phone: string };
     }) => {
+      if (settingsRef.current.soundEnabled && !payload.message.fromMe) {
+        playNotificationSound();
+      }
+
       const currentFilter = filterRef.current;
 
       setTickets((prev) => {
@@ -321,13 +335,37 @@ export default function InboxPage() {
     }
   };
 
+  const filteredTickets = tickets.filter((t) => {
+    if (!searchQuery) return true;
+    const term = searchQuery.toLowerCase();
+    const phone = t.contact.phone.replace(/\D/g, '');
+    const termNum = term.replace(/\D/g, '');
+    
+    return (
+      t.contact.name.toLowerCase().includes(term) || 
+      (termNum.length > 2 && phone.includes(termNum))
+    );
+  });
+
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 font-sans">
-      <AppSidebar role={userRole} />
+    <AuthGuard allowedPermissions={['INBOX']}>
+      <div className="flex h-screen overflow-hidden bg-slate-50 font-sans">
+        <AppSidebar permissions={permissions} />
 
       <div className="w-80 bg-white border-r border-slate-200 flex flex-col z-10 shrink-0">
         <div className="p-5 border-b border-slate-100">
-          <h2 className="text-xl font-bold text-purple-950">Atendimentos</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-purple-950">Atendimentos</h2>
+            <button
+              onClick={() => setIsNewChatOpen(true)}
+              className="w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center hover:bg-purple-200 transition-colors"
+              title="Nova Conversa"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+          </div>
           {error && (
             <p className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded-lg">{error}</p>
           )}
@@ -355,6 +393,20 @@ export default function InboxPage() {
               Pendentes
             </button>
           </div>
+          <div className="mt-4">
+            <div className="relative">
+              <svg className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Buscar conversa..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto">
@@ -366,7 +418,12 @@ export default function InboxPage() {
               Nenhum atendimento. Envie uma mensagem pelo WhatsApp para testar.
             </p>
           )}
-          {tickets.map((ticket) => {
+          {!loading && tickets.length > 0 && filteredTickets.length === 0 && (
+            <p className="p-4 text-sm text-slate-400 text-center">
+              Nenhuma conversa encontrada para a busca.
+            </p>
+          )}
+          {filteredTickets.map((ticket) => {
             const isActive = activeTicket?.id === ticket.id;
             return (
               <button
@@ -653,7 +710,18 @@ export default function InboxPage() {
           }
         />
       </div>
-    </div>
+      </div>
+
+      <NewChatModal
+        isOpen={isNewChatOpen}
+        onClose={() => setIsNewChatOpen(false)}
+        onTicketCreated={(ticket) => {
+          setTickets((prev) => [ticket, ...prev.filter((t) => t.id !== ticket.id)]);
+          setActiveTicket(ticket);
+          setFilter(ticket.status === 'PENDING' ? 'PENDING' : 'OPEN');
+        }}
+      />
+    </AuthGuard>
   );
 }
 

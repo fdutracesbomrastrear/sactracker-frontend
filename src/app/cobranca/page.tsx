@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { AppSidebar } from '@/components/AppSidebar';
+import { AppSidebar } from '@/modules/core/components/AppSidebar';
 import {
   CobrancaResultado,
   CobrancaStatus,
@@ -15,15 +15,17 @@ import {
   simularVencemHoje,
   simularVencidosOntem,
   SimulacaoCobranca,
-} from '@/lib/cobranca';
-import { clearSession, getUser } from '@/lib/auth';
-import { parseUserRole, roleLabel } from '@/lib/roles';
+} from '@/modules/cobranca/api/cobranca';
+import { clearSession, getUser } from '@/modules/core/lib/auth';
+import { parsePermissions, roleLabel } from '@/modules/core/lib/roles';
 import { useRouter } from 'next/navigation';
+import { AuthGuard } from '@/modules/core/components/AuthGuard';
 
 export default function CobrancaPage() {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const user = getUser();
-  const role = parseUserRole(user?.role);
+  const permissions = parsePermissions(user?.permissions);
   const [status, setStatus] = useState<CobrancaStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [acao, setAcao] = useState<string | null>(null);
@@ -67,8 +69,9 @@ export default function CobrancaPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      <AppSidebar role={role} />
+    <AuthGuard allowedPermissions={['COBRANCA', 'FINANCEIRO']}>
+      <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
+      <AppSidebar permissions={permissions} />
       <div className="flex-1 flex flex-col min-w-0">
         <header className="h-14 border-b border-slate-200 bg-white flex items-center justify-between px-6 shrink-0">
           <div>
@@ -78,7 +81,7 @@ export default function CobrancaPage() {
         <div className="flex items-center gap-3">
           {user && (
             <span className="text-xs text-slate-500">
-              {user.name} · {roleLabel(role)}
+              {user.name} · {roleLabel(permissions)}
             </span>
           )}
           <button
@@ -172,7 +175,8 @@ export default function CobrancaPage() {
         )}
         </main>
       </div>
-    </div>
+      </div>
+    </AuthGuard>
   );
 }
 

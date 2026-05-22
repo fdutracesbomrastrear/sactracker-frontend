@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { login } from '@/lib/api';
-import { getUser, isAuthenticated, setSession } from '@/lib/auth';
-import { getHomePath, parseUserRole } from '@/lib/roles';
+import { login } from '@/modules/core/lib/api';
+import { getUser, isAuthenticated, setSession } from '@/modules/core/lib/auth';
+import { getHomePath, parsePermissions } from '@/modules/core/lib/roles';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,7 +15,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated()) {
-      router.replace(getHomePath(parseUserRole(getUser()?.role)));
+      router.replace(getHomePath(parsePermissions(getUser()?.permissions)));
     }
   }, [router]);
 
@@ -27,7 +27,7 @@ export default function LoginPage() {
     try {
       const { token, user } = await login(email, password);
       setSession(token, user);
-      router.push(getHomePath(parseUserRole(user.role)));
+      router.push(getHomePath(parsePermissions(user.permissions)));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao entrar');
     } finally {
