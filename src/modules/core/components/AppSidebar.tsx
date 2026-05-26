@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  ModulePermission,
   canAccessCobranca,
   canAccessFinanceiro,
   canAccessInbox,
@@ -18,7 +17,7 @@ type NavItem = {
   icon: React.ReactNode;
 };
 
-export function AppSidebar({ permissions }: { permissions: ModulePermission[] }) {
+export function AppSidebar({ permissions }: { permissions: string[] }) {
   const pathname = usePathname();
   const { openSettings } = usePanelSettings();
 

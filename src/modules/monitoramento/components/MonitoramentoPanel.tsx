@@ -23,7 +23,7 @@ import {
   VeiculoMonitoramento,
 } from '@/modules/monitoramento/api/rastreamento';
 import { getUser } from '@/modules/core/lib/auth';
-import { canEnviarComandoSms, parsePermissions } from '@/modules/core/lib/roles';
+import { canBloquearVeiculo, parsePermissions } from '@/modules/core/lib/roles';
 import { StatusVeiculoPanel } from '@/modules/monitoramento/components/StatusVeiculoPanel';
 
 type AcaoComando = 'bloquear' | 'desbloquear' | null;
@@ -39,30 +39,35 @@ const FILTROS: { id: FiltroVeiculo; label: string }[] = [
 function BotoesComandoVeiculo({
   veiculo,
   enviando,
-  podeSms,
+  podeBloquear,
   onBloquear,
   onDesbloquear,
 }: {
   veiculo: VeiculoMonitoramento;
   enviando: AcaoComando;
-  podeSms: boolean;
+  podeBloquear: boolean;
   onBloquear: () => void;
   onDesbloquear: () => void;
 }) {
   const eq = veiculo.comandosRastreador;
   const ocupado = enviando !== null;
-  const desabilitadoBase = !podeSms || ocupado;
+
+  // Se não tem permissão, oculta completamente o bloco
+  if (!podeBloquear) {
+    return (
+      <p className="text-xs text-slate-400 italic">
+        Você não tem permissão para bloquear/desbloquear veículos.
+      </p>
+    );
+  }
 
   return (
     <div className="space-y-2">
-      {!podeSms ? (
-        <p className="text-xs text-slate-500">Envio SMS: perfil Atendente (somente leitura).</p>
-      ) : null}
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
           onClick={onBloquear}
-          disabled={desabilitadoBase || !eq.chip || !eq.comandoBloquear}
+          disabled={ocupado || !eq.chip || !eq.comandoBloquear}
           className="inline-flex flex-1 min-w-[120px] items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
         >
           {enviando === 'bloquear' ? 'Enviando…' : 'Bloquear'}
@@ -70,7 +75,7 @@ function BotoesComandoVeiculo({
         <button
           type="button"
           onClick={onDesbloquear}
-          disabled={desabilitadoBase || !eq.chip || !eq.comandoDesbloquear}
+          disabled={ocupado || !eq.chip || !eq.comandoDesbloquear}
           className="inline-flex flex-1 min-w-[120px] items-center justify-center gap-2 rounded-lg border border-emerald-600 bg-white px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
         >
           {enviando === 'desbloquear' ? 'Enviando…' : 'Desbloquear'}
@@ -94,8 +99,8 @@ function IndicadorLista({ v }: { v: VeiculoMonitoramento }) {
 
 export function MonitoramentoPanel() {
   const searchParams = useSearchParams();
-  const role = parsePermissions(getUser()?.permissions);
-  const podeSms = canEnviarComandoSms(role);
+  const userPermissions = parsePermissions(getUser()?.permissions);
+  const podeBloquear = canBloquearVeiculo(userPermissions);
 
   const [cfg, setCfg] = useState<RastreamentoConfig | null>(null);
   const [veiculos, setVeiculos] = useState<VeiculoMonitoramento[]>([]);
@@ -227,7 +232,7 @@ export function MonitoramentoPanel() {
   }, [aguardandoConfirmacao, selecionado, ultimaAcaoSms, atualizarVeiculoNaLista]);
 
   async function handleComando(acao: 'bloquear' | 'desbloquear') {
-    if (!selecionado || !podeSms) return;
+    if (!selecionado || !podeBloquear) return;
     const eq = selecionado.comandosRastreador;
     const comando = acao === 'bloquear' ? eq.comandoBloquear : eq.comandoDesbloquear;
     if (!eq.chip || !comando) {
@@ -261,7 +266,7 @@ export function MonitoramentoPanel() {
   }
 
   async function enviarLivre() {
-    if (!selecionado || !podeSms || !comandoLivre.trim()) return;
+    if (!selecionado || !podeBloquear || !comandoLivre.trim()) return;
     setEnviandoComando(null);
     setErro(null);
     try {
@@ -404,7 +409,7 @@ export function MonitoramentoPanel() {
               </label>
             </header>
 
-            {cfg?.smsGatewayConfigurado && podeSms ? (
+            {cfg?.smsGatewayConfigurado && podeBloquear ? (
               <div className="mx-6 mt-2 text-xs text-sky-800 bg-sky-50 border border-sky-100 rounded-lg px-3 py-2">
                 Envio real via ClickSend — consome créditos da conta.
               </div>
@@ -464,11 +469,11 @@ export function MonitoramentoPanel() {
                   <BotoesComandoVeiculo
                     veiculo={selecionado}
                     enviando={enviandoComando}
-                    podeSms={podeSms}
+                    podeBloquear={podeBloquear}
                     onBloquear={() => void handleComando('bloquear')}
                     onDesbloquear={() => void handleComando('desbloquear')}
                   />
-                  {podeSms ? (
+                  {podeBloquear ? (
                     <div className="space-y-1">
                       <textarea
                         value={comandoLivre}
@@ -514,7 +519,7 @@ export function MonitoramentoPanel() {
                 >
                   {mostrarChips ? 'Ocultar' : 'Ver'} chips manuais (CSV)
                 </button>
-                {mostrarChips ? <ChipsPanel podeEditar={role.includes('ADMIN')} placaPadrao={selecionado.placa} /> : null}
+                {mostrarChips ? <ChipsPanel podeEditar={userPermissions.includes('ADMIN')} placaPadrao={selecionado.placa} /> : null}
 
                 <button
                   type="button"

@@ -2,12 +2,12 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getHomePath, parsePermissions, ModulePermission } from '@/modules/core/lib/roles';
+import { getHomePath, parsePermissions } from '@/modules/core/lib/roles';
 import { getUser, isAuthenticated } from '@/modules/core/lib/auth';
 
 type Props = {
   children: React.ReactNode;
-  allowedPermissions?: ModulePermission[];
+  allowedPermissions?: string[];
   className?: string;
 };
 

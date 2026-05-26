@@ -1,5 +1,4 @@
 import { apiFetch } from '@/modules/core/lib/api';
-import { ModulePermission } from '@/modules/core/lib/roles';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL !== undefined ? process.env.NEXT_PUBLIC_API_URL : 'http://localhost:3001';
 
@@ -7,7 +6,7 @@ export interface UserItem {
   id: string;
   name: string;
   email: string;
-  permissions: ModulePermission[];
+  permissions: string[]; // ModulePermission | SubPermission
   active: boolean;
   createdAt: string;
 };
