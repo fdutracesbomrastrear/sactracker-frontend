@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { getToken } from '@/modules/core/lib/auth';
+import { getToken, getUser } from '@/modules/core/lib/auth';
+import { parsePermissions } from '@/modules/core/lib/roles';
 import {
   fetchWhatsAppQr,
   fetchWhatsAppStatus,
@@ -18,7 +19,9 @@ export function WhatsAppQrOverlay() {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
-  const autenticado = Boolean(getToken()) && !pathname.startsWith('/login');
+  const user = getUser();
+  const isAdmin = user ? parsePermissions(user.permissions).includes('ADMIN') : false;
+  const autenticado = Boolean(getToken()) && !pathname.startsWith('/login') && isAdmin;
 
   const carregarQr = useCallback(async (refresh = false) => {
     setLoading(true);

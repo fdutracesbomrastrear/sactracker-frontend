@@ -41,7 +41,9 @@ function authHeaders(): HeadersInit {
   return headers;
 }
 
-export async function apiFetch(url: string, options: RequestInit = {}) {
+export async function apiFetch(path: string, options: RequestInit = {}): Promise<Response> {
+  const base = API_URL || '';
+  const url = path.startsWith('http') ? path : `${base}${path}`;
   const res = await fetch(url, {
     ...options,
     headers: {
@@ -60,6 +62,18 @@ export async function apiFetch(url: string, options: RequestInit = {}) {
 
   return res;
 }
+
+// Helper genérico que já faz .json() e trata erros
+export async function apiFetchJSON<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
+  const res = await apiFetch(path, options);
+  if (!res.ok) {
+    let msg = `Erro ${res.status}`;
+    try { const d = await res.json(); msg = d.error || d.message || msg; } catch {}
+    throw new Error(msg);
+  }
+  return res.json() as Promise<T>;
+}
+
 
 export async function login(email: string, password: string): Promise<LoginResponse> {
   const res = await fetch(`${API_URL}/api/auth/login`, {

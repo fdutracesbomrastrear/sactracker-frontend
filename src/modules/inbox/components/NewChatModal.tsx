@@ -1,9 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { getToken } from '@/modules/core/lib/auth';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { apiFetch, apiFetchJSON } from '@/modules/core/lib/api';
 
 type Contact = {
   id: string;
@@ -57,11 +55,7 @@ export function NewChatModal({ isOpen, onClose, onTicketCreated }: Props) {
   const fetchContacts = async (q: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/contacts?q=${encodeURIComponent(q)}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      if (!res.ok) throw new Error('Falha ao buscar');
-      const data = await res.json();
+      const data = await apiFetchJSON<Contact[]>(`/api/contacts?q=${encodeURIComponent(q)}`);
       setContacts(data);
     } catch (e) {
       console.error(e);
@@ -76,20 +70,13 @@ export function NewChatModal({ isOpen, onClose, onTicketCreated }: Props) {
     setError('');
     setCreating(true);
     try {
-      const res = await fetch(`${API_URL}/api/contacts`, {
+      const data = await apiFetchJSON<Contact>('/api/contacts', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${getToken()}`,
-        },
         body: JSON.stringify({ name: newName, phone: newPhone }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro ao criar contato');
-      
       handleStartChat(data.id);
     } catch (e: any) {
-      setError(e.message);
+      setError(e.message || 'Erro ao criar contato');
       setCreating(false);
     }
   };
@@ -97,21 +84,14 @@ export function NewChatModal({ isOpen, onClose, onTicketCreated }: Props) {
   const handleStartChat = async (contactId: string) => {
     setCreating(true);
     try {
-      const res = await fetch(`${API_URL}/api/tickets/new`, {
+      const data = await apiFetchJSON<any>('/api/tickets/new', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${getToken()}`,
-        },
         body: JSON.stringify({ contactId }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro ao iniciar conversa');
-      
       onTicketCreated(data);
       onClose();
     } catch (e: any) {
-      setError(e.message);
+      setError(e.message || 'Erro ao iniciar conversa');
     } finally {
       setCreating(false);
     }
