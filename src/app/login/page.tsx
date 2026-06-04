@@ -37,7 +37,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-purple-950 relative overflow-hidden">
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-[128px] opacity-50" />
+      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-purple-600 rounded-full mix-blend-multiply filter blur-[128px] opacity-50" />
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-amber-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-30" />
 
       <div className="relative w-full max-w-md rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 p-8 shadow-2xl">
@@ -89,7 +89,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/30 transition-all hover:scale-[1.02] disabled:opacity-70 disabled:hover:scale-100"
+            className="w-full rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-purple-500/30 transition-all hover:scale-[1.02] disabled:opacity-70 disabled:hover:scale-100"
           >
             {loading ? 'Entrando...' : 'Acessar Painel'}
           </button>

@@ -5,11 +5,51 @@
   --foreground: #171717;
 }
 
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Brand Colors Override */
+  /* Principal: #9D5D98 (Orchid / Medium Purple) */
+  --color-purple-50: #fbf6fa;
+  --color-purple-100: #f7ecf6;
+  --color-purple-200: #f0daef;
+  --color-purple-300: #e3bbe1;
+  --color-purple-400: #d194cf;
+  --color-purple-500: #bc71ba;
+  --color-purple-600: #9d5d98;
+  --color-purple-700: #82477c;
+  --color-purple-800: #6c3b67;
+  --color-purple-900: #5b3457;
+  --color-purple-950: #3c1938;
+
+  /* Secundária: #E8EF0C (Neon Yellow / Lime) */
+  --color-amber-50: #fdfef2;
+  --color-amber-100: #fafbe0;
+  --color-amber-200: #f5f8b8;
+  --color-amber-300: #edf481;
+  --color-amber-400: #e8ef0c;
+  --color-amber-500: #d0d705;
+  --color-amber-600: #b0b603;
+  --color-amber-700: #8d9205;
+  --color-amber-800: #707409;
+  --color-amber-900: #5e600c;
+  --color-amber-950: #343702;
+
+  /* Terciária: #9F9F96 (Slate / Cool Gray) */
+  --color-slate-50: #f8f8f7;
+  --color-slate-100: #f0f0ee;
+  --color-slate-200: #e0e1dc;
+  --color-slate-300: #cbccc4;
+  --color-slate-400: #ababa2;
+  --color-slate-500: #9f9f96;
+  --color-slate-600: #7c7c74;
+  --color-slate-700: #64645e;
+  --color-slate-800: #50504b;
+  --color-slate-900: #42423f;
+  --color-slate-950: #292927;
 }
 
 body {
@@ -28,4 +68,13 @@ select {
 input::placeholder,
 textarea::placeholder {
   color: #94a3b8;
+}
+
+/* Hide scrollbar utility class */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+}
+.no-scrollbar {
+  -ms-overflow-style: none !important;  /* IE and Edge */
+  scrollbar-width: none !important;  /* Firefox */
 }
