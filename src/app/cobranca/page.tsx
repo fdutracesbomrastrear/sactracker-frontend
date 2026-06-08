@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { AppSidebar } from '@/modules/core/components/AppSidebar';
 import {
   CobrancaResultado,
   CobrancaStatus,
@@ -16,16 +15,10 @@ import {
   simularVencidosOntem,
   SimulacaoCobranca,
 } from '@/modules/cobranca/api/cobranca';
-import { clearSession, getUser } from '@/modules/core/lib/auth';
-import { parsePermissions, roleLabel } from '@/modules/core/lib/roles';
-import { useRouter } from 'next/navigation';
-import { AuthGuard } from '@/modules/core/components/AuthGuard';
+import { PageHeader } from '@/modules/core/components/ui/PageHeader';
 
 export default function CobrancaPage() {
-  const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const user = getUser();
-  const permissions = parsePermissions(user?.permissions);
   const [status, setStatus] = useState<CobrancaStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [acao, setAcao] = useState<string | null>(null);
@@ -69,36 +62,15 @@ export default function CobrancaPage() {
   }
 
   return (
-    <AuthGuard allowedPermissions={['COBRANCA', 'FINANCEIRO']}>
-      <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
-      <AppSidebar permissions={permissions} />
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 border-b border-slate-200 bg-white flex items-center justify-between px-6 shrink-0">
-          <div>
-            <h1 className="text-lg font-bold text-purple-950">Cobrança ativa</h1>
-            <p className="text-xs text-slate-500">Disparos e simulações</p>
-          </div>
-        <div className="flex items-center gap-3">
-          {user && (
-            <span className="text-xs text-slate-500">
-              {user.name} · {roleLabel(permissions)}
-            </span>
-          )}
-          <button
-            type="button"
-            onClick={() => {
-              clearSession();
-              router.push('/login');
-            }}
-            className="text-xs font-medium text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-lg hover:bg-slate-100"
-          >
-            Sair
-          </button>
-        </div>
-      </header>
+    <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
+      <PageHeader
+        title="Cobrança ativa"
+        subtitle="Disparos e simulações"
+        className="shrink-0"
+      />
 
       <main className="flex-1 p-6 max-w-3xl w-full mx-auto space-y-6 overflow-y-auto">
-        {loading && <p className="text-sm text-slate-500">Carregando...</p>}
+        {loading && <p className="text-sm text-ink-soft">Carregando...</p>}
         {erro && (
           <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg p-3">
             {erro}
@@ -106,9 +78,9 @@ export default function CobrancaPage() {
         )}
 
         {status && (
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-bold text-slate-800 mb-2">Status</h2>
-            <ul className="text-sm text-slate-600 space-y-1">
+          <div className="rounded-2xl border border-line bg-surface p-5 shadow-sm">
+            <h2 className="text-sm font-bold text-ink mb-2">Status</h2>
+            <ul className="text-sm text-ink-soft space-y-1">
               <li>
                 Automação:{' '}
                 <strong>{status.enabled ? 'Ativa' : 'Pausada'}</strong>
@@ -116,15 +88,15 @@ export default function CobrancaPage() {
               <li>Horário comercial: {status.horario}</li>
               <li>Clientes com trava registrada: {status.registros}</li>
             </ul>
-            <p className="text-xs text-slate-400 mt-3">
+            <p className="text-xs text-ink-faint mt-3">
               A rotina automática roda a cada hora (09h–18h). Disparos manuais ignoram o horário.
             </p>
           </div>
         )}
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-3">
-          <h2 className="text-sm font-bold text-slate-800">Disparos reais</h2>
-          <p className="text-xs text-slate-500">
+        <div className="rounded-2xl border border-line bg-surface p-5 shadow-sm space-y-3">
+          <h2 className="text-sm font-bold text-ink">Disparos reais</h2>
+          <p className="text-xs text-ink-soft">
             Lembrete → boleto → PIX em bolha separada. ~70–90s entre clientes.
           </p>
           <div className="flex flex-wrap gap-2">
@@ -136,13 +108,13 @@ export default function CobrancaPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-3">
-          <h2 className="text-sm font-bold text-slate-800">Simulação (dry-run)</h2>
-          <p className="text-xs text-slate-500">Não envia mensagens — apenas lista quem receberia.</p>
+        <div className="rounded-2xl border border-line bg-surface p-5 shadow-sm space-y-3">
+          <h2 className="text-sm font-bold text-ink">Simulação (dry-run)</h2>
+          <p className="text-xs text-ink-soft">Não envia mensagens — apenas lista quem receberia.</p>
           <div className="flex flex-wrap gap-2">
-            <button type="button" disabled={!!acao} onClick={() => void executar('sim-d2', simularVencemEm2Dias)} className="text-xs font-semibold border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-50 disabled:opacity-50">Simular D-2</button>
-            <button type="button" disabled={!!acao} onClick={() => void executar('sim-hoje', simularVencemHoje)} className="text-xs font-semibold border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-50 disabled:opacity-50">Simular D0</button>
-            <button type="button" disabled={!!acao} onClick={() => void executar('sim-ontem', simularVencidosOntem)} className="text-xs font-semibold border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-50 disabled:opacity-50">Simular D+1</button>
+            <button type="button" disabled={!!acao} onClick={() => void executar('sim-d2', simularVencemEm2Dias)} className="text-xs font-semibold border border-line px-4 py-2 rounded-lg hover:bg-subtle disabled:opacity-50">Simular D-2</button>
+            <button type="button" disabled={!!acao} onClick={() => void executar('sim-hoje', simularVencemHoje)} className="text-xs font-semibold border border-line px-4 py-2 rounded-lg hover:bg-subtle disabled:opacity-50">Simular D0</button>
+            <button type="button" disabled={!!acao} onClick={() => void executar('sim-ontem', simularVencidosOntem)} className="text-xs font-semibold border border-line px-4 py-2 rounded-lg hover:bg-subtle disabled:opacity-50">Simular D+1</button>
           </div>
         </div>
 
@@ -173,10 +145,8 @@ export default function CobrancaPage() {
             )}
           </div>
         )}
-        </main>
-      </div>
-      </div>
-    </AuthGuard>
+      </main>
+    </div>
   );
 }
 

@@ -1,6 +1,6 @@
 import { apiFetch } from '@/modules/core/lib/api';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL !== undefined ? process.env.NEXT_PUBLIC_API_URL : 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 export type StatusVeiculo = {
   ignicaoLigada: boolean | null;
@@ -50,6 +50,20 @@ export type VeiculoMonitoramento = {
   linkGoogleMaps: string | null;
   linkMonitoramentoRastro: string | null;
 };
+
+export type CategoriaSaude = 'critica' | 'atencao' | 'ok';
+
+export interface ProblemaSaude {
+  tipo: 'bateria_violada' | 'bateria_fraca' | 'offline_longo' | 'offline_curto';
+  descricao: string;
+  templateMensagem: string;
+}
+
+export interface VeiculoSaude extends VeiculoMonitoramento {
+  categoriaSaude: CategoriaSaude;
+  problemas: ProblemaSaude[];
+  telefoneContato: string | null;
+}
 
 export type FiltroVeiculo =
   | 'todos'
@@ -144,6 +158,34 @@ export async function fetchVeiculosMonitoramento(params?: {
   const res = await apiFetch(`${API_URL}/api/rastreamento/veiculos${qs}`);
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || 'Falha ao carregar veículos');
+  return data;
+}
+
+export async function fetchSaudeFrota(atualizar = false): Promise<{ criticos: VeiculoSaude[], atencao: VeiculoSaude[] }> {
+  const qs = atualizar ? '?atualizar=1' : '';
+  const res = await apiFetch(`${API_URL}/api/rastreamento/saude-frota${qs}`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Falha ao carregar saúde da frota');
+  return data;
+}
+
+/**
+ * Envia um aviso (offline/bateria) ao cliente 100% pelo painel — pela mesma
+ * instância de WhatsApp do sistema (Evolution API) — em vez de abrir o
+ * WhatsApp do operador (wa.me). A mensagem fica registrada no ticket.
+ */
+export async function avisarClienteSaude(params: {
+  telefone: string;
+  nomeCliente?: string;
+  mensagem: string;
+  placa?: string;
+}): Promise<{ ok: boolean; ticketId: string; messageId: string }> {
+  const res = await apiFetch(`${API_URL}/api/rastreamento/avisar`, {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Falha ao enviar aviso ao cliente');
   return data;
 }
 

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getToken } from '@/modules/core/lib/auth';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL !== undefined ? process.env.NEXT_PUBLIC_API_URL : 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 const URL_REGEX = /(https?:\/\/[^\s]+)/g;
 
@@ -16,11 +16,12 @@ type Props = {
 };
 
 function renderFormattedLine(line: string, fromMe: boolean) {
+  const normalizedLine = line.replace(/\*\*+/g, '*');
   const linkClass = fromMe
     ? 'underline decoration-white/40 underline-offset-2 hover:decoration-white break-all'
-    : 'text-violet-600 underline decoration-violet-200 underline-offset-2 hover:text-violet-800 break-all';
+    : 'underline decoration-current/40 underline-offset-2 hover:decoration-current break-all';
 
-  const parts = line.split(URL_REGEX);
+  const parts = normalizedLine.split(URL_REGEX);
   return parts.flatMap((part, i) => {
     if (part.startsWith('http://') || part.startsWith('https://')) {
       const label =
@@ -64,82 +65,52 @@ export function ChatMessageContent({
   fileName,
   fromMe,
 }: Props) {
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
-  const hasMedia = Boolean(mediaType && fileName);
+  const hasMedia = Boolean(mediaType);
+  const [token, setToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    setToken(getToken());
+  }, []);
+
+  const mediaUrl = hasMedia && token ? `${API_URL}/api/tickets/messages/${messageId}/file?token=${token}` : null;
 
   const lines = useMemo(
     () => content.split('\n').filter((l, i, arr) => l.trim() || i < arr.length - 1),
     [content]
   );
 
-  useEffect(() => {
-    if (!hasMedia || mediaType !== 'image') {
-      setBlobUrl(null);
-      return;
-    }
-
-    let cancelled = false;
-    let objectUrl: string | null = null;
-    const token = getToken();
-
-    fetch(`${API_URL}/api/tickets/messages/${messageId}/file`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error('Falha ao carregar imagem');
-        return res.blob();
-      })
-      .then((blob) => {
-        if (cancelled) return;
-        objectUrl = URL.createObjectURL(blob);
-        setBlobUrl(objectUrl);
-      })
-      .catch(() => setBlobUrl(null));
-
-    return () => {
-      cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-  }, [hasMedia, mediaType, messageId]);
-
-  const downloadAttachment = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const token = getToken();
-    fetch(`${API_URL}/api/tickets/messages/${messageId}/file`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-      .then((r) => r.blob())
-      .then((blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName || 'arquivo';
-        a.click();
-        URL.revokeObjectURL(url);
-      });
-  };
-
   return (
     <div className="space-y-2.5 min-w-0">
-      {mediaType === 'image' && blobUrl && (
-        <a href={blobUrl} target="_blank" rel="noreferrer" className="block">
+      {hasMedia && mediaUrl && mediaType === 'image' && (
+        <a href={mediaUrl} target="_blank" rel="noreferrer" className="block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={blobUrl}
+            src={mediaUrl}
             alt={fileName || 'Imagem'}
             className="rounded-xl max-h-56 w-full object-cover ring-1 ring-black/5"
           />
         </a>
       )}
 
-      {hasMedia && mediaType !== 'image' && (
-        <button
-          type="button"
-          onClick={downloadAttachment}
+      {hasMedia && mediaUrl && mediaType === 'audio' && (
+        <div className="pt-1">
+          <audio src={mediaUrl} controls className="max-w-full h-10" />
+        </div>
+      )}
+
+      {hasMedia && mediaUrl && mediaType === 'video' && (
+        <video src={mediaUrl} controls className="rounded-xl max-h-56 w-full object-cover ring-1 ring-black/5" />
+      )}
+
+      {hasMedia && mediaUrl && mediaType === 'document' && (
+        <a
+          href={mediaUrl}
+          target="_blank"
+          rel="noreferrer"
           className={`flex items-center gap-2.5 w-full text-left rounded-xl px-3 py-2.5 transition-colors ${
             fromMe
               ? 'bg-white/15 hover:bg-white/20'
-              : 'bg-slate-50 hover:bg-slate-100 ring-1 ring-slate-200/80'
+              : 'bg-subtle hover:bg-subtle ring-1 ring-line/80'
           }`}
         >
           <span
@@ -149,10 +120,10 @@ export function ChatMessageContent({
           >
             📎
           </span>
-          <span className={`text-sm font-medium truncate ${fromMe ? 'text-white' : 'text-slate-700'}`}>
+          <span className={`text-sm font-medium truncate ${fromMe ? 'text-white' : 'text-ink'}`}>
             {fileName}
           </span>
-        </button>
+        </a>
       )}
 
       {lines.map((line, idx) => {
@@ -165,7 +136,7 @@ export function ChatMessageContent({
               className={`rounded-xl px-3 py-2.5 font-mono text-[11px] leading-relaxed break-all ${
                 fromMe
                   ? 'bg-white/12 text-white/95 ring-1 ring-white/20'
-                  : 'bg-slate-50 text-slate-700 ring-1 ring-slate-200'
+                  : 'bg-subtle text-ink ring-1 ring-line'
               }`}
             >
               {line.trim()}
@@ -176,9 +147,7 @@ export function ChatMessageContent({
         return (
           <p
             key={`line-${idx}`}
-            className={`text-[14px] leading-relaxed break-words ${
-              fromMe ? 'text-white/95' : 'text-slate-700'
-            }`}
+            className="text-[14px] leading-relaxed break-words"
           >
             {renderFormattedLine(line, fromMe)}
           </p>

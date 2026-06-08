@@ -4,13 +4,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { ChatMessage, fetchMessages, fetchTickets, TicketItem } from '@/modules/core/lib/api';
 import { getToken, getUser } from '@/modules/core/lib/auth';
-import { AppSidebar } from '@/modules/core/components/AppSidebar';
 import { parsePermissions } from '@/modules/core/lib/roles';
 import { ChatMessageContent } from '@/modules/inbox/components/ChatMessageContent';
 import { usePanelSettings } from '@/modules/core/hooks/PanelSettingsProvider';
 import { bubblePadding, fontSizeClass, messageGap } from '@/modules/core/lib/panel-settings';
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL || '';
 
 function formatTime(dateStr: string) {
   const date = new Date(dateStr);
@@ -156,14 +155,13 @@ export default function HistoricoPage() {
   });
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
-      <AppSidebar permissions={permissions} />
+    <div className="flex flex-1 bg-subtle overflow-hidden font-sans min-w-0">
 
       {/* LISTA DE TICKETS */}
-      <div className="w-80 bg-white border-r border-slate-200 flex flex-col shrink-0 relative z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-        <div className="p-4 border-b border-slate-100 bg-white">
+      <div className="w-80 bg-surface border-r border-line flex flex-col shrink-0 relative z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+        <div className="p-4 border-b border-line bg-surface">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-bold text-slate-800 tracking-tight">Histórico</h1>
+            <h1 className="text-xl font-bold text-ink tracking-tight">Histórico</h1>
             <span className="bg-purple-100 text-purple-700 text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-full">
               Auditoria
             </span>
@@ -173,7 +171,7 @@ export default function HistoricoPage() {
             placeholder="Buscar por nome ou número..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+            className="w-full px-4 py-2 bg-subtle border border-line rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
           />
         </div>
 
@@ -182,10 +180,10 @@ export default function HistoricoPage() {
             <div className="p-6 space-y-4">
               {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="flex gap-3 animate-pulse">
-                  <div className="w-12 h-12 bg-slate-200 rounded-full shrink-0" />
+                  <div className="w-12 h-12 bg-subtle rounded-full shrink-0" />
                   <div className="flex-1 space-y-2 py-1">
-                    <div className="h-4 bg-slate-200 rounded w-2/3" />
-                    <div className="h-3 bg-slate-100 rounded w-full" />
+                    <div className="h-4 bg-subtle rounded w-2/3" />
+                    <div className="h-3 bg-subtle rounded w-full" />
                   </div>
                 </div>
               ))}
@@ -193,8 +191,8 @@ export default function HistoricoPage() {
           ) : error ? (
             <div className="p-6 text-center text-red-500 text-sm">{error}</div>
           ) : filteredTickets.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-slate-400 p-6 text-center">
-              <svg className="w-12 h-12 mb-3 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex flex-col items-center justify-center h-full text-ink-faint p-6 text-center">
+              <svg className="w-12 h-12 mb-3 text-ink-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
               <p className="text-sm font-medium">Nenhum ticket encontrado</p>
@@ -207,7 +205,7 @@ export default function HistoricoPage() {
                   onClick={() => {
                     setActiveTicket(ticket);
                   }}
-                  className={`w-full p-4 flex gap-3 text-left transition-all hover:bg-slate-50 relative group ${
+                  className={`w-full p-4 flex gap-3 text-left transition-all hover:bg-subtle relative group ${
                     activeTicket?.id === ticket.id ? 'bg-purple-50/50' : ''
                   }`}
                 >
@@ -219,22 +217,22 @@ export default function HistoricoPage() {
                   </div>
                   <div className="flex-1 min-w-0 overflow-hidden flex flex-col justify-center">
                     <div className="flex justify-between items-baseline mb-0.5">
-                      <h3 className="font-semibold text-slate-800 truncate text-[15px]">
+                      <h3 className="font-semibold text-ink truncate text-[15px]">
                         {ticket.contact.name}
                       </h3>
-                      <span className="text-[11px] font-medium text-slate-400 shrink-0 ml-2">
+                      <span className="text-[11px] font-medium text-ink-faint shrink-0 ml-2">
                         {formatTime(ticket.lastMessageAt)}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
-                        ticket.status === 'CLOSED' ? 'bg-slate-200 text-slate-600' :
+                        ticket.status === 'CLOSED' ? 'bg-subtle text-ink-soft' :
                         ticket.status === 'PENDING' ? 'bg-amber-100 text-amber-700' :
                         'bg-emerald-100 text-emerald-700'
                       }`}>
                         {ticket.status === 'CLOSED' ? 'Finalizado' : ticket.status === 'PENDING' ? 'Aguardando' : 'Aberto'}
                       </span>
-                      <p className="text-sm text-slate-500 truncate flex-1 leading-relaxed">
+                      <p className="text-sm text-ink-soft truncate flex-1 leading-relaxed">
                         {ticket.lastMessage || 'Nova conversa'}
                       </p>
                     </div>
@@ -247,19 +245,19 @@ export default function HistoricoPage() {
       </div>
 
       {/* ÁREA PRINCIPAL DO CHAT */}
-      <div className="flex-1 flex flex-col min-w-0 bg-white relative">
+      <div className="flex-1 flex flex-col min-w-0 bg-surface relative">
         {activeTicket ? (
           <>
-            <div className="h-[72px] shrink-0 border-b border-slate-200 bg-white flex items-center px-6 justify-between shadow-sm z-10 relative">
+            <div className="h-[72px] shrink-0 border-b border-line bg-surface flex items-center px-6 justify-between shadow-sm z-10 relative">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center text-purple-700 font-bold shadow-sm border border-purple-200/50">
                   {activeTicket.contact.name.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <h2 className="font-bold text-slate-800 text-[17px] leading-tight">
+                  <h2 className="font-bold text-ink text-[17px] leading-tight">
                     {activeTicket.contact.name}
                   </h2>
-                  <p className="text-sm text-slate-500 font-medium">{activeTicket.contact.phone}</p>
+                  <p className="text-sm text-ink-soft font-medium">{activeTicket.contact.phone}</p>
                 </div>
               </div>
             </div>
@@ -270,7 +268,7 @@ export default function HistoricoPage() {
             >
               <div className={`max-w-3xl mx-auto flex flex-col ${messageGap(settings.compactMode)}`}>
                 {messages.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-32 text-slate-400">
+                  <div className="flex flex-col items-center justify-center h-32 text-ink-faint">
                     <p className="text-sm font-medium">Nenhuma mensagem neste ticket.</p>
                   </div>
                 ) : (
@@ -326,8 +324,8 @@ export default function HistoricoPage() {
                 <div ref={messagesEndRef} className="h-4" />
               </div>
             </div>
-            <div className="p-4 bg-slate-50 border-t border-slate-200 text-center">
-              <span className="text-sm text-slate-500 flex items-center justify-center gap-2">
+            <div className="p-4 bg-subtle border-t border-line text-center">
+              <span className="text-sm text-ink-soft flex items-center justify-center gap-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
@@ -336,14 +334,14 @@ export default function HistoricoPage() {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 text-slate-400">
-            <div className="w-24 h-24 mb-6 rounded-full bg-white shadow-sm flex items-center justify-center">
-              <svg className="w-10 h-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="flex-1 flex flex-col items-center justify-center bg-subtle text-ink-faint">
+            <div className="w-24 h-24 mb-6 rounded-full bg-surface shadow-sm flex items-center justify-center">
+              <svg className="w-10 h-10 text-ink-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
               </svg>
             </div>
-            <p className="text-lg font-medium text-slate-600 mb-2">Histórico de Auditoria</p>
-            <p className="text-sm text-slate-400 max-w-sm text-center">
+            <p className="text-lg font-medium text-ink-soft mb-2">Histórico de Auditoria</p>
+            <p className="text-sm text-ink-faint max-w-sm text-center">
               Selecione uma conversa na lateral para visualizar o histórico completo das mensagens.
             </p>
           </div>

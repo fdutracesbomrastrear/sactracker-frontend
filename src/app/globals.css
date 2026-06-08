@@ -1,73 +1,218 @@
 @import "tailwindcss";
 
+/* Dark mode por classe (.dark) em vez de prefers-color-scheme.
+   O ThemeProvider adiciona/remove a classe `dark` no <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ============================================================
+   TOKENS SEMÂNTICOS NEUTROS (claro)
+   Estes NÃO são tocados pelo tema dinâmico do admin (que sobrescreve
+   apenas as escalas de marca purple/amber/slate). São o cinza "de verdade"
+   usado em 90% da UI — fundo, superfícies, bordas e texto.
+   ============================================================ */
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #18181b;
+
+  /* Superfícies neutras */
+  --app: #f6f6f7;        /* fundo geral da aplicação */
+  --surface: #ffffff;    /* cards, colunas, painéis */
+  --subtle: #f1f1f3;     /* fills sutis, hover, faixas */
+
+  /* Bordas */
+  --line: #e6e6e9;
+  --line-strong: #d6d6da;
+
+  /* Texto */
+  --ink: #1c1c20;        /* texto principal */
+  --ink-soft: #5b5b66;   /* texto secundário */
+  --ink-faint: #8a8a94;  /* placeholder, legendas */
+
+  /* Sidebar (mantém-se escura/aubergine sóbria nos dois temas) */
+  --sidebar: #1d0a29;
+  --sidebar-2: #25103312;
+  --sidebar-hover: #ffffff14;
+  --sidebar-active: #ffffff0f;
+  --sidebar-ink: #efe7f4;
+  --sidebar-ink-soft: #b9a8c6;
+  --sidebar-ink-faint: #8a7796;
+
+  /* Scrollbar (claro) */
+  --scrollbar-thumb: #cdcdd3;
+  --scrollbar-thumb-hover: #b3b3bb;
 }
 
-@theme {
+/* ============================================================
+   TOKENS SEMÂNTICOS NEUTROS (escuro)
+   ============================================================ */
+.dark {
+  --background: #0f0f12;
+  --foreground: #ececee;
+
+  --app: #0f0f12;
+  --surface: #17171b;
+  --subtle: #1f1f24;
+
+  --line: #2a2a31;
+  --line-strong: #3a3a43;
+
+  --ink: #ececee;
+  --ink-soft: #a6a6b0;
+  --ink-faint: #71717a;
+
+  --sidebar: #160720;
+  --sidebar-2: #1d0a2900;
+  --sidebar-hover: #ffffff10;
+  --sidebar-active: #ffffff0d;
+  --sidebar-ink: #efe7f4;
+  --sidebar-ink-soft: #b9a8c6;
+  --sidebar-ink-faint: #877496;
+
+  /* Scrollbar (escuro) */
+  --scrollbar-thumb: #3a3a44;
+  --scrollbar-thumb-hover: #4c4c58;
+}
+
+/* Expõe os tokens semânticos como utilitários Tailwind (bg-surface,
+   text-ink, border-line, etc.). `inline` faz o valor seguir o tema. */
+@theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  --color-app: var(--app);
+  --color-surface: var(--surface);
+  --color-subtle: var(--subtle);
+
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-ink: var(--sidebar-ink);
+  --color-sidebar-ink-soft: var(--sidebar-ink-soft);
+  --color-sidebar-ink-faint: var(--sidebar-ink-faint);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* Brand Colors Override */
-  /* Principal: #9D5D98 (Orchid / Medium Purple) */
-  --color-purple-50: #fbf6fa;
-  --color-purple-100: #f7ecf6;
-  --color-purple-200: #f0daef;
-  --color-purple-300: #e3bbe1;
-  --color-purple-400: #d194cf;
-  --color-purple-500: #bc71ba;
-  --color-purple-600: #9d5d98;
-  --color-purple-700: #82477c;
-  --color-purple-800: #6c3b67;
-  --color-purple-900: #5b3457;
-  --color-purple-950: #3c1938;
+  /* Raio padrão consistente */
+  --radius-lg: 0.625rem; /* 10px */
+  --radius-xl: 0.875rem; /* 14px */
+}
 
-  /* Secundária: #E8EF0C (Neon Yellow / Lime) */
-  --color-amber-50: #fdfef2;
-  --color-amber-100: #fafbe0;
-  --color-amber-200: #f5f8b8;
-  --color-amber-300: #edf481;
-  --color-amber-400: #e8ef0c;
-  --color-amber-500: #d0d705;
-  --color-amber-600: #b0b603;
-  --color-amber-700: #8d9205;
-  --color-amber-800: #707409;
-  --color-amber-900: #5e600c;
-  --color-amber-950: #343702;
+@theme {
+  /* ====== ESCALAS DE MARCA (controladas pelo tema dinâmico do admin) ====== */
+  /* Principal: #71218F (Deep Purple) */
+  --color-purple-50: #FAF4FC;
+  --color-purple-100: #EFE1F5;
+  --color-purple-200: #DFBFEB;
+  --color-purple-300: #C78FE0;
+  --color-purple-400: #AA5CD1;
+  --color-purple-500: #8F35B8;
+  --color-purple-600: #71218f;
+  --color-purple-700: #5B1A73;
+  --color-purple-800: #441457;
+  --color-purple-900: #2E0D3A;
+  --color-purple-950: #1A0721;
 
-  /* Terciária: #9F9F96 (Slate / Cool Gray) */
-  --color-slate-50: #f8f8f7;
-  --color-slate-100: #f0f0ee;
-  --color-slate-200: #e0e1dc;
-  --color-slate-300: #cbccc4;
-  --color-slate-400: #ababa2;
-  --color-slate-500: #9f9f96;
-  --color-slate-600: #7c7c74;
-  --color-slate-700: #64645e;
-  --color-slate-800: #50504b;
-  --color-slate-900: #42423f;
-  --color-slate-950: #292927;
+  /* Secundária: #C2AA0E (Gold/Olive Yellow) */
+  --color-amber-50: #FCFAF4;
+  --color-amber-100: #F6EFC2;
+  --color-amber-200: #EDDE85;
+  --color-amber-300: #E0CA2B;
+  --color-amber-400: #c2aa0e;
+  --color-amber-500: #A7920C;
+  --color-amber-600: #8B7A0A;
+  --color-amber-700: #6F6208;
+  --color-amber-800: #534906;
+  --color-amber-900: #383104;
+  --color-amber-950: #252103;
+
+  /* Terciária: #1A0EC2 (Rich Blue) */
+  --color-slate-50: #F4F4FC;
+  --color-slate-100: #E6E5FA;
+  --color-slate-200: #CDCCF5;
+  --color-slate-300: #A2A1EB;
+  --color-slate-400: #6966E0;
+  --color-slate-500: #1a0ec2;
+  --color-slate-600: #160CA6;
+  --color-slate-700: #110982;
+  --color-slate-800: #0C075E;
+  --color-slate-900: #070438;
+  --color-slate-950: #040221;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--app);
+  color: var(--ink);
 }
 
-/* App é tema claro; evita texto herdado quase branco em inputs no Windows (modo escuro do SO) */
+/* ============================================================
+   SCROLLBARS — finas, trilho transparente e polegar que segue o
+   tema (sutil no claro e no escuro). Elimina a barra branca padrão
+   do navegador que destoava no tema escuro.
+   ============================================================ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Inputs em superfícies claras/escuras herdam a cor de texto correta */
 input,
 textarea,
 select {
-  color: #0f172a;
+  color: var(--ink);
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: #94a3b8;
+  color: var(--ink-faint);
+}
+
+/* ============================================================
+   AUTOFILL no login — o navegador força fundo claro e mantém o
+   texto claro, fazendo as letras "sumirem" ao preencher. Forçamos
+   fundo escuro fixo + texto branco apenas nos campos de auth.
+   ============================================================ */
+.auth-input {
+  color: #ffffff !important;
+}
+.auth-input::placeholder {
+  color: #71717a; /* zinc-500 */
+}
+.auth-input:-webkit-autofill,
+.auth-input:-webkit-autofill:hover,
+.auth-input:-webkit-autofill:focus,
+.auth-input:-webkit-autofill:active {
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #ffffff;
+  -webkit-box-shadow: 0 0 0px 1000px #18181b inset !important;
+  box-shadow: 0 0 0px 1000px #18181b inset !important;
+  transition: background-color 9999s ease-in-out 0s;
 }
 
 /* Hide scrollbar utility class */

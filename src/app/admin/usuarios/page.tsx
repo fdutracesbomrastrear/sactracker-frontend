@@ -17,6 +17,11 @@ import {
 const SUB_PERMISSIONS_BY_MODULE: Record<ModulePermission, { id: SubPermission; label: string }[]> = {
   MONITORAMENTO: [
     { id: 'MONITORAMENTO_BLOQUEAR', label: 'Bloquear / Desbloquear veículo' },
+    { id: 'MONITORAMENTO_SAUDE_FROTA', label: 'Saúde da Frota: Acessar diagnóstico de veículos' },
+    { id: 'SKYEYER_SIMULAR', label: 'Skyeyer: Simular cenários de telemetria' },
+    { id: 'SKYEYER_MONITORAR_REAL', label: 'Skyeyer: Monitorar telemetria de clientes reais' },
+    { id: 'SKYEYER_PROTOCOLO_EMERGENCIA', label: 'Skyeyer: Acionar Protocolo de Emergência (Vermelho)' },
+    { id: 'SKYEYER_ALERTA_RISCO', label: 'Skyeyer: Acionar Alerta de Risco (Laranja)' },
   ],
   FINANCEIRO: [
     { id: 'FINANCEIRO_VER_FATURAS_VENCIDAS', label: 'Ver faturas vencidas (em atraso)' },
@@ -52,6 +57,12 @@ export default function UsuariosPage() {
   });
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [selectedUserForPassword, setSelectedUserForPassword] = useState<UserItem | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -142,6 +153,24 @@ export default function UsuariosPage() {
     }
   }
 
+  async function handleChangePassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selectedUserForPassword) return;
+    setPasswordLoading(true);
+    setPasswordError(null);
+    try {
+      await updateUser(selectedUserForPassword.id, { password: newPassword });
+      setIsPasswordModalOpen(false);
+      setSelectedUserForPassword(null);
+      setNewPassword('');
+      alert('Senha alterada com sucesso!');
+    } catch (err) {
+      setPasswordError(err instanceof Error ? err.message : 'Erro ao alterar a senha');
+    } finally {
+      setPasswordLoading(false);
+    }
+  }
+
   const handleFormPermissionToggle = (perm: string) => {
     setFormData(prev => {
       let newPerms = [...prev.permissions];
@@ -160,12 +189,12 @@ export default function UsuariosPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 text-slate-900 font-sans overflow-y-auto p-8">
+    <div className="flex flex-col h-screen bg-subtle text-ink font-sans overflow-y-auto p-8">
       <div className="max-w-5xl mx-auto w-full">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800">Gestão de Equipe</h1>
-            <p className="text-slate-500 mt-1">Gerencie os acessos ao painel SacTracker</p>
+            <h1 className="text-3xl font-bold text-ink">Gestão de Equipe</h1>
+            <p className="text-ink-soft mt-1">Gerencie os acessos ao painel SacTracker</p>
           </div>
           <button
             onClick={() => setIsModalOpen(true)}
@@ -181,12 +210,12 @@ export default function UsuariosPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-surface rounded-2xl shadow-sm border border-line overflow-hidden">
           {loading ? (
-            <div className="p-8 text-center text-slate-500">Carregando usuários...</div>
+            <div className="p-8 text-center text-ink-soft">Carregando usuários...</div>
           ) : (
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium">
+              <thead className="bg-subtle border-b border-line text-ink-soft font-medium">
                 <tr>
                   <th className="px-6 py-4">Nome</th>
                   <th className="px-6 py-4">E-mail</th>
@@ -194,12 +223,12 @@ export default function UsuariosPage() {
                   <th className="px-6 py-4 text-right">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-line">
                 {users.map(u => (
                   <>
-                    <tr key={u.id} className="hover:bg-slate-50/50 transition">
-                      <td className="px-6 py-4 font-medium text-slate-700">{u.name}</td>
-                      <td className="px-6 py-4 text-slate-600">{u.email}</td>
+                    <tr key={u.id} className="hover:bg-subtle/50 transition">
+                      <td className="px-6 py-4 font-medium text-ink">{u.name}</td>
+                      <td className="px-6 py-4 text-ink-soft">{u.email}</td>
                       <td className="px-6 py-4">
                         <span className={`flex items-center gap-1.5 text-xs font-medium ${u.active ? 'text-emerald-600' : 'text-red-600'}`}>
                           <span className={`w-2 h-2 rounded-full ${u.active ? 'bg-emerald-500' : 'bg-red-500'}`} />
@@ -209,9 +238,18 @@ export default function UsuariosPage() {
                       <td className="px-6 py-4 text-right space-x-3">
                         <button
                           onClick={() => setEditingUserId(editingUserId === u.id ? null : u.id)}
-                          className="text-purple-700 hover:text-purple-900 font-medium text-xs"
+                          className="text-purple-700 hover:text-ink font-medium text-xs"
                         >
                           {editingUserId === u.id ? 'Fechar' : 'Permissões'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedUserForPassword(u);
+                            setIsPasswordModalOpen(true);
+                          }}
+                          className="text-amber-700 hover:text-amber-900 font-medium text-xs"
+                        >
+                          Senha
                         </button>
                         <button
                           onClick={() => handleToggleActive(u)}
@@ -234,7 +272,7 @@ export default function UsuariosPage() {
                               const hasMod = u.permissions.includes(mod);
                               const subPerms = SUB_PERMISSIONS_BY_MODULE[mod];
                               return (
-                                <div key={mod} className="bg-white rounded-xl border border-slate-200 p-4">
+                                <div key={mod} className="bg-surface rounded-xl border border-line p-4">
                                   {/* Módulo principal */}
                                   <label className="flex items-center gap-3 cursor-pointer">
                                     <input
@@ -242,9 +280,9 @@ export default function UsuariosPage() {
                                       checked={hasMod}
                                       onChange={() => handleTogglePermission(u, mod)}
                                       disabled={mod === 'ADMIN' && u.id === getUser()?.id && hasMod}
-                                      className="w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500"
+                                      className="w-4 h-4 rounded border-line-strong text-purple-600 focus:ring-purple-500"
                                     />
-                                    <span className={`font-semibold text-sm ${mod === 'ADMIN' ? 'text-amber-700' : 'text-slate-800'}`}>
+                                    <span className={`font-semibold text-sm ${mod === 'ADMIN' ? 'text-amber-700' : 'text-ink'}`}>
                                       {MODULE_LABELS[mod]}
                                     </span>
                                     {hasMod && (
@@ -257,16 +295,16 @@ export default function UsuariosPage() {
                                   {/* Sub-permissões (só mostra se módulo estiver ativo e não for ADMIN) */}
                                   {hasMod && !u.permissions.includes('ADMIN') && subPerms.length > 0 && (
                                     <div className="mt-3 ml-7 space-y-2 border-l-2 border-purple-100 pl-4">
-                                      <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wide">Permissões específicas</p>
+                                      <p className="text-[10px] text-ink-soft uppercase font-bold tracking-wide">Permissões específicas</p>
                                       {subPerms.map(sub => (
                                         <label key={sub.id} className="flex items-center gap-2 cursor-pointer group">
                                           <input
                                             type="checkbox"
                                             checked={u.permissions.includes(sub.id)}
                                             onChange={() => handleTogglePermission(u, sub.id)}
-                                            className="w-3.5 h-3.5 rounded border-slate-300 text-purple-600 focus:ring-purple-500"
+                                            className="w-3.5 h-3.5 rounded border-line-strong text-purple-600 focus:ring-purple-500"
                                           />
-                                          <span className="text-xs text-slate-700 group-hover:text-slate-900">
+                                          <span className="text-xs text-ink group-hover:text-ink">
                                             {sub.label}
                                           </span>
                                         </label>
@@ -289,7 +327,7 @@ export default function UsuariosPage() {
                 ))}
                 {users.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-slate-500">
+                    <td colSpan={4} className="px-6 py-8 text-center text-ink-soft">
                       Nenhum usuário encontrado.
                     </td>
                   </tr>
@@ -302,75 +340,75 @@ export default function UsuariosPage() {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold text-slate-800 mb-4">Novo Usuário</h2>
+          <div className="w-full max-w-lg rounded-2xl bg-surface shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold text-ink mb-4">Novo Usuário</h2>
             <form onSubmit={handleCreateUser} className="space-y-4">
               {formError && <p className="text-sm text-red-600 bg-red-50 p-2 rounded">{formError}</p>}
               
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Nome Completo</label>
+                <label className="block text-sm font-medium text-ink mb-1">Nome Completo</label>
                 <input
                   required
                   value={formData.name}
                   onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full rounded-lg border-slate-300 border px-3 py-2 focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full rounded-lg border-line-strong border px-3 py-2 focus:ring-purple-500 focus:border-purple-500"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">E-mail</label>
+                <label className="block text-sm font-medium text-ink mb-1">E-mail</label>
                 <input
                   type="email"
                   required
                   value={formData.email}
                   onChange={e => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full rounded-lg border-slate-300 border px-3 py-2 focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full rounded-lg border-line-strong border px-3 py-2 focus:ring-purple-500 focus:border-purple-500"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Senha Provisória</label>
+                <label className="block text-sm font-medium text-ink mb-1">Senha Provisória</label>
                 <input
                   type="password"
                   required
                   minLength={6}
                   value={formData.password}
                   onChange={e => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full rounded-lg border-slate-300 border px-3 py-2 focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full rounded-lg border-line-strong border px-3 py-2 focus:ring-purple-500 focus:border-purple-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Permissões de Acesso</label>
-                <div className="space-y-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                <label className="block text-sm font-medium text-ink mb-2">Permissões de Acesso</label>
+                <div className="space-y-3 bg-subtle p-3 rounded-lg border border-line">
                   {MODULE_PERMISSIONS.map(mod => {
                     const hasMod = formData.permissions.includes(mod);
                     const subPerms = SUB_PERMISSIONS_BY_MODULE[mod];
                     return (
-                      <div key={mod} className="bg-white rounded-lg border border-slate-200 p-3">
+                      <div key={mod} className="bg-surface rounded-lg border border-line p-3">
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
                             type="checkbox"
                             checked={hasMod}
                             onChange={() => handleFormPermissionToggle(mod)}
-                            className="rounded border-slate-300 text-purple-600 focus:ring-purple-500 w-4 h-4"
+                            className="rounded border-line-strong text-purple-600 focus:ring-purple-500 w-4 h-4"
                           />
-                          <span className={`text-sm font-medium ${mod === 'ADMIN' ? 'text-amber-700' : 'text-slate-700'}`}>
+                          <span className={`text-sm font-medium ${mod === 'ADMIN' ? 'text-amber-700' : 'text-ink'}`}>
                             {MODULE_LABELS[mod]}
                           </span>
                         </label>
                         {hasMod && mod !== 'ADMIN' && subPerms.length > 0 && (
                           <div className="mt-2 ml-6 space-y-1.5 border-l-2 border-purple-100 pl-3">
-                            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wide">Permissões específicas</p>
+                            <p className="text-[10px] text-ink-soft uppercase font-bold tracking-wide">Permissões específicas</p>
                             {subPerms.map(sub => (
                               <label key={sub.id} className="flex items-center gap-2 cursor-pointer">
                                 <input
                                   type="checkbox"
                                   checked={formData.permissions.includes(sub.id)}
                                   onChange={() => handleFormPermissionToggle(sub.id)}
-                                  className="rounded border-slate-300 text-purple-600 focus:ring-purple-500 w-3.5 h-3.5"
+                                  className="rounded border-line-strong text-purple-600 focus:ring-purple-500 w-3.5 h-3.5"
                                 />
-                                <span className="text-xs text-slate-600">{sub.label}</span>
+                                <span className="text-xs text-ink-soft">{sub.label}</span>
                               </label>
                             ))}
                           </div>
@@ -381,11 +419,11 @@ export default function UsuariosPage() {
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4 mt-6 border-t border-slate-100">
+              <div className="flex gap-3 pt-4 mt-6 border-t border-line">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 px-4 py-2 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg font-medium transition"
+                  className="flex-1 px-4 py-2 text-ink-soft bg-subtle hover:bg-subtle rounded-lg font-medium transition"
                 >
                   Cancelar
                 </button>
@@ -395,6 +433,54 @@ export default function UsuariosPage() {
                   className="flex-1 px-4 py-2 bg-purple-950 text-white rounded-lg hover:bg-purple-900 font-medium transition disabled:opacity-50"
                 >
                   {formLoading ? 'Salvando...' : 'Criar Usuário'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {isPasswordModalOpen && selectedUserForPassword && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-surface shadow-2xl p-6">
+            <h2 className="text-xl font-bold text-ink mb-2">Alterar Senha</h2>
+            <p className="text-ink-soft text-sm mb-4">
+              Alterando a senha de <strong>{selectedUserForPassword.name}</strong>
+            </p>
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              {passwordError && <p className="text-sm text-red-600 bg-red-50 p-2 rounded">{passwordError}</p>}
+              
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">Nova Senha</label>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  className="w-full rounded-lg border-line-strong border px-3 py-2 focus:ring-purple-500 focus:border-purple-500 text-ink"
+                  placeholder="Mínimo 6 caracteres"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-line">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPasswordModalOpen(false);
+                    setSelectedUserForPassword(null);
+                    setNewPassword('');
+                    setPasswordError(null);
+                  }}
+                  className="flex-1 px-4 py-2 text-ink-soft bg-subtle hover:bg-subtle rounded-lg font-medium transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={passwordLoading}
+                  className="flex-1 px-4 py-2 bg-purple-950 text-white rounded-lg hover:bg-purple-900 font-medium transition disabled:opacity-50"
+                >
+                  {passwordLoading ? 'Alterando...' : 'Confirmar'}
                 </button>
               </div>
             </form>

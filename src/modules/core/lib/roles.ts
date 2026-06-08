@@ -8,6 +8,11 @@ export const SUB_PERMISSIONS = [
   'FINANCEIRO_VER_FATURAS_VENCIDAS',
   'FINANCEIRO_VER_FATURAS_A_VENCER',
   'FINANCEIRO_ENVIAR_COBRANCA',
+  'SKYEYER_SIMULAR',
+  'SKYEYER_MONITORAR_REAL',
+  'SKYEYER_PROTOCOLO_EMERGENCIA',
+  'SKYEYER_ALERTA_RISCO',
+  'MONITORAMENTO_SAUDE_FROTA',
 ] as const;
 export type SubPermission = (typeof SUB_PERMISSIONS)[number];
 
@@ -84,12 +89,43 @@ export function canEnviarComandoSms(permissions: string[]): boolean {
   return canBloquearVeiculo(permissions);
 }
 
+/** Pode simular rotas no Skyeyer */
+export function canSimularSkyeyer(permissions: string[]): boolean {
+  if (isAdmin(permissions)) return true;
+  return permissions.includes('SKYEYER_SIMULAR');
+}
+
+/** Pode monitorar telemetria real de clientes no Skyeyer */
+export function canMonitorarRealSkyeyer(permissions: string[]): boolean {
+  if (isAdmin(permissions)) return true;
+  return permissions.includes('SKYEYER_MONITORAR_REAL');
+}
+
+/** Pode acionar protocolo de emergência do Skyeyer */
+export function canAcionarEmergenciaSkyeyer(permissions: string[]): boolean {
+  if (isAdmin(permissions)) return true;
+  return permissions.includes('SKYEYER_PROTOCOLO_EMERGENCIA');
+}
+
+/** Pode acionar alerta de risco do Skyeyer */
+export function canAcionarAlertaSkyeyer(permissions: string[]): boolean {
+  if (isAdmin(permissions)) return true;
+  return permissions.includes('SKYEYER_ALERTA_RISCO');
+}
+
+/** Pode acessar saúde da frota */
+export function canAccessSaudeFrota(permissions: string[]): boolean {
+  if (isAdmin(permissions)) return true;
+  return permissions.includes('MONITORAMENTO_SAUDE_FROTA');
+}
+
+
 export function getHomePath(permissions: string[]): string {
+  if (isAdmin(permissions)) return '/admin/dashboard';
   if (permissions.includes('INBOX')) return '/inbox';
   if (permissions.includes('FINANCEIRO')) return '/financeiro';
   if (permissions.includes('COBRANCA')) return '/cobranca';
   if (permissions.includes('MONITORAMENTO')) return '/monitoramento';
-  if (permissions.includes('ADMIN')) return '/admin/usuarios';
   return '/login';
 }
 

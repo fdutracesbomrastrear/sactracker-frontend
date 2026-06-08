@@ -55,7 +55,7 @@ function BotoesComandoVeiculo({
   // Se não tem permissão, oculta completamente o bloco
   if (!podeBloquear) {
     return (
-      <p className="text-xs text-slate-400 italic">
+      <p className="text-xs text-ink-faint italic">
         Você não tem permissão para bloquear/desbloquear veículos.
       </p>
     );
@@ -76,7 +76,7 @@ function BotoesComandoVeiculo({
           type="button"
           onClick={onDesbloquear}
           disabled={ocupado || !eq.chip || !eq.comandoDesbloquear}
-          className="inline-flex flex-1 min-w-[120px] items-center justify-center gap-2 rounded-lg border border-emerald-600 bg-white px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+          className="inline-flex flex-1 min-w-[120px] items-center justify-center gap-2 rounded-lg border border-emerald-600 bg-surface px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
         >
           {enviando === 'desbloquear' ? 'Enviando…' : 'Desbloquear'}
         </button>
@@ -304,14 +304,14 @@ export function MonitoramentoPanel() {
 
   return (
     <div className="flex h-full min-h-0 w-full">
-      <aside className="w-80 shrink-0 border-r border-slate-200 bg-white flex flex-col">
-        <div className="p-3 border-b border-slate-100 space-y-2">
+      <aside className="w-80 shrink-0 border-r border-line bg-surface flex flex-col">
+        <div className="p-3 border-b border-line space-y-2">
           <input
             type="search"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Buscar placa, cliente…"
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-line px-3 py-2 text-sm"
           />
           <div className="flex flex-wrap gap-1">
             {FILTROS.map((f) => (
@@ -320,7 +320,7 @@ export function MonitoramentoPanel() {
                 type="button"
                 onClick={() => setFiltro(f.id)}
                 className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
-                  filtro === f.id ? 'bg-purple-100 text-purple-800' : 'bg-slate-100 text-slate-600'
+                  filtro === f.id ? 'bg-purple-100 text-purple-800' : 'bg-subtle text-ink-soft'
                 }`}
               >
                 {f.label}
@@ -330,7 +330,7 @@ export function MonitoramentoPanel() {
           <select
             value={ordenar}
             onChange={(e) => setOrdenar(e.target.value as OrdenarVeiculo)}
-            className="w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5"
+            className="w-full text-xs border border-line rounded-lg px-2 py-1.5"
           >
             <option value="placa">Ordenar: placa</option>
             <option value="bloqueados_primeiro">Bloqueados primeiro</option>
@@ -340,18 +340,18 @@ export function MonitoramentoPanel() {
             type="button"
             onClick={() => void carregar(true)}
             disabled={carregando}
-            className="w-full text-xs font-medium rounded-lg border border-slate-200 py-2 hover:bg-slate-50 disabled:opacity-50"
+            className="w-full text-xs font-medium rounded-lg border border-line py-2 hover:bg-subtle disabled:opacity-50"
           >
             {carregando ? 'Atualizando…' : 'Atualizar posições'}
           </button>
           {cfg ? (
-            <p className="text-[10px] text-slate-500">
+            <p className="text-[10px] text-ink-soft">
               {veiculos.length} veículo(s)
               {!cfg.smsGatewayConfigurado ? ' · SMS simulado' : ' · ClickSend ativo'}
             </p>
           ) : null}
         </div>
-        <ul className="flex-1 overflow-y-auto divide-y divide-slate-100">
+        <ul className="flex-1 overflow-y-auto divide-y divide-line">
           {veiculos.map((v) => (
             <li key={v.id}>
               <button
@@ -367,26 +367,26 @@ export function MonitoramentoPanel() {
               >
                 <div className="flex items-center">
                   <IndicadorLista v={v} />
-                  <span className="font-semibold text-sm text-purple-950">{v.placa}</span>
+                  <span className="font-semibold text-sm text-ink">{v.placa}</span>
                 </div>
-                <div className="text-xs text-slate-600 truncate pl-3.5">{v.cliente || '—'}</div>
+                <div className="text-xs text-ink-soft truncate pl-3.5">{v.cliente || '—'}</div>
               </button>
             </li>
           ))}
         </ul>
       </aside>
 
-      <section className="flex-1 flex flex-col min-w-0 bg-slate-50">
+      <section className="flex-1 flex flex-col min-w-0 bg-subtle">
         {!selecionado ? (
-          <div className="flex-1 flex items-center justify-center text-slate-500 text-sm">
+          <div className="flex-1 flex items-center justify-center text-ink-soft text-sm">
             Selecione um veículo.
           </div>
         ) : (
           <>
-            <header className="shrink-0 bg-white border-b px-6 py-4 flex flex-wrap justify-between gap-2">
+            <header className="shrink-0 bg-surface border-b px-6 py-4 flex flex-wrap justify-between gap-2">
               <div>
-                <h2 className="text-xl font-bold text-purple-950">{selecionado.placa}</h2>
-                <p className="text-sm text-slate-600">
+                <h2 className="text-xl font-bold text-ink">{selecionado.placa}</h2>
+                <p className="text-sm text-ink-soft">
                   {selecionado.cliente || selecionado.nome}
                   {selecionado.statusVeiculo ? ` · ${selecionado.statusVeiculo}` : ''}
                 </p>
@@ -399,7 +399,7 @@ export function MonitoramentoPanel() {
                   </Link>
                 ) : null}
               </div>
-              <label className="flex items-center gap-2 text-sm text-slate-700">
+              <label className="flex items-center gap-2 text-sm text-ink">
                 <input
                   type="checkbox"
                   checked={acompanharAoVivo}
@@ -433,15 +433,15 @@ export function MonitoramentoPanel() {
             ) : null}
 
             <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2">
-              <div className="p-4 space-y-4 overflow-y-auto bg-white border-r border-slate-200">
+              <div className="p-4 space-y-4 overflow-y-auto bg-surface border-r border-line">
                 <StatusVeiculoPanel status={selecionado.status} />
 
                 <div>
                   <h3 className="text-sm font-semibold mb-1">Localização</h3>
                   {enderecoExibicao ? (
-                    <p className="text-sm text-slate-700">{enderecoExibicao}</p>
+                    <p className="text-sm text-ink">{enderecoExibicao}</p>
                   ) : (
-                    <p className="text-sm text-slate-500">Sem endereço (geocoding ao atualizar).</p>
+                    <p className="text-sm text-ink-soft">Sem endereço (geocoding ao atualizar).</p>
                   )}
                   <div className="flex gap-2 mt-2">
                     {selecionado.linkGoogleMaps ? (
@@ -457,14 +457,14 @@ export function MonitoramentoPanel() {
                     <button
                       type="button"
                       onClick={copiarLink}
-                      className="text-xs text-slate-600 hover:text-slate-900"
+                      className="text-xs text-ink-soft hover:text-ink"
                     >
                       Copiar link
                     </button>
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                <div className="rounded-xl border border-line bg-subtle p-4 space-y-3">
                   <h3 className="text-sm font-semibold">Comandos SMS</h3>
                   <BotoesComandoVeiculo
                     veiculo={selecionado}
@@ -480,7 +480,7 @@ export function MonitoramentoPanel() {
                         onChange={(e) => setComandoLivre(e.target.value)}
                         placeholder="Comando SMS livre (ex: WHERE#)"
                         rows={2}
-                        className="w-full text-xs font-mono border border-slate-200 rounded-lg p-2"
+                        className="w-full text-xs font-mono border border-line rounded-lg p-2"
                       />
                       <button
                         type="button"
@@ -496,13 +496,13 @@ export function MonitoramentoPanel() {
                 <div>
                   <h3 className="text-sm font-semibold mb-2">Histórico SMS</h3>
                   {historico.length === 0 ? (
-                    <p className="text-xs text-slate-500">Nenhum comando registrado.</p>
+                    <p className="text-xs text-ink-soft">Nenhum comando registrado.</p>
                   ) : (
                     <ul className="space-y-1 max-h-32 overflow-y-auto text-xs">
                       {historico.map((h) => (
-                        <li key={h.id} className="border-b border-slate-100 pb-1">
+                        <li key={h.id} className="border-b border-line pb-1">
                           <span className="font-medium">{h.acao}</span> — {h.comando}{' '}
-                          <span className="text-slate-500">
+                          <span className="text-ink-soft">
                             {new Date(h.createdAt).toLocaleString('pt-BR')} · {h.user.name}
                             {h.simulado ? ' (sim)' : ''}
                           </span>
@@ -531,11 +531,11 @@ export function MonitoramentoPanel() {
                 {mostrarProtocolos ? <ProtocolosPanel /> : null}
               </div>
 
-              <div className="min-h-[280px] relative bg-slate-200">
+              <div className="min-h-[280px] relative bg-subtle">
                 {mapaSrc ? (
                   <iframe title="Mapa" src={mapaSrc} className="absolute inset-0 w-full h-full border-0" />
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-500">
+                  <div className="absolute inset-0 flex items-center justify-center text-sm text-ink-soft">
                     Mapa indisponível
                   </div>
                 )}
@@ -583,28 +583,28 @@ function ChipsPanel({ podeEditar, placaPadrao }: { podeEditar: boolean; placaPad
     }
   }
 
-  if (!linhas) return <p className="text-xs text-slate-500">Carregando…</p>;
+  if (!linhas) return <p className="text-xs text-ink-soft">Carregando…</p>;
 
   return (
-    <div className="text-xs border border-slate-200 rounded-lg p-2 space-y-2">
-      <p className="text-slate-500 truncate">{linhas.arquivo}</p>
+    <div className="text-xs border border-line rounded-lg p-2 space-y-2">
+      <p className="text-ink-soft truncate">{linhas.arquivo}</p>
       {podeEditar ? (
         <form onSubmit={(e) => void handleSalvarChip(e)} className="flex flex-wrap gap-1 items-end">
           <label className="flex flex-col gap-0.5">
-            <span className="text-slate-500">Placa</span>
+            <span className="text-ink-soft">Placa</span>
             <input
               value={placa}
               onChange={(e) => setPlaca(e.target.value)}
-              className="border border-slate-200 rounded px-1.5 py-0.5 font-mono w-24"
+              className="border border-line rounded px-1.5 py-0.5 font-mono w-24"
             />
           </label>
           <label className="flex flex-col gap-0.5 flex-1 min-w-[120px]">
-            <span className="text-slate-500">Chip</span>
+            <span className="text-ink-soft">Chip</span>
             <input
               value={chip}
               onChange={(e) => setChip(e.target.value)}
               placeholder="5511999999999"
-              className="border border-slate-200 rounded px-1.5 py-0.5 font-mono w-full"
+              className="border border-line rounded px-1.5 py-0.5 font-mono w-full"
             />
           </label>
           <button
@@ -616,12 +616,12 @@ function ChipsPanel({ podeEditar, placaPadrao }: { podeEditar: boolean; placaPad
           </button>
         </form>
       ) : (
-        <p className="text-slate-500">Edição do CSV: perfil ADMIN.</p>
+        <p className="text-ink-soft">Edição do CSV: perfil ADMIN.</p>
       )}
       {erroChip ? <p className="text-red-600">{erroChip}</p> : null}
       <div className="max-h-32 overflow-y-auto">
         {linhas.linhas.length === 0 ? (
-          <p className="text-slate-500">Arquivo vazio.</p>
+          <p className="text-ink-soft">Arquivo vazio.</p>
         ) : (
           linhas.linhas.map((r) => (
             <p key={r.placa} className="font-mono">
@@ -651,20 +651,20 @@ function ProtocolosPanel() {
       });
   }, []);
 
-  if (protocolos === null) return <p className="text-xs text-slate-500">Carregando…</p>;
+  if (protocolos === null) return <p className="text-xs text-ink-soft">Carregando…</p>;
 
   return (
-    <div className="text-xs border border-slate-200 rounded-lg p-2 max-h-48 overflow-auto space-y-2">
-      <p className="text-slate-500">
+    <div className="text-xs border border-line rounded-lg p-2 max-h-48 overflow-auto space-y-2">
+      <p className="text-ink-soft">
         Referência local — atualize com{' '}
-        <code className="bg-slate-100 px-1 rounded">npm run atualizar-comandos</code> no backend.
+        <code className="bg-subtle px-1 rounded">npm run atualizar-comandos</code> no backend.
       </p>
       <details>
-        <summary className="cursor-pointer font-medium text-slate-700">Protocolos / modelos</summary>
+        <summary className="cursor-pointer font-medium text-ink">Protocolos / modelos</summary>
         <pre className="mt-1 whitespace-pre-wrap break-all text-[10px]">{JSON.stringify(protocolos, null, 2)}</pre>
       </details>
       <details>
-        <summary className="cursor-pointer font-medium text-slate-700">Famílias de comandos</summary>
+        <summary className="cursor-pointer font-medium text-ink">Famílias de comandos</summary>
         <pre className="mt-1 whitespace-pre-wrap break-all text-[10px]">{JSON.stringify(familias, null, 2)}</pre>
       </details>
     </div>

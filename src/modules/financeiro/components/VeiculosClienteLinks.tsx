@@ -18,13 +18,13 @@ export function VeiculosClienteLinks({ nomeCliente }: { nomeCliente: string }) {
   }, [nomeCliente]);
 
   if (carregando) {
-    return <p className="text-[10px] text-slate-500 mt-2">Carregando veículos…</p>;
+    return <p className="text-[10px] text-ink-soft mt-2">Carregando veículos…</p>;
   }
   if (veiculos.length === 0) return null;
 
   return (
-    <div className="mt-3 pt-3 border-t border-slate-100">
-      <p className="text-[10px] font-semibold text-slate-600 mb-1">Monitoramento</p>
+    <div className="mt-3 pt-3 border-t border-line">
+      <p className="text-[10px] font-semibold text-ink-soft mb-1">Monitoramento</p>
       <div className="flex flex-wrap gap-1">
         {veiculos.map((v) => (
           <Link

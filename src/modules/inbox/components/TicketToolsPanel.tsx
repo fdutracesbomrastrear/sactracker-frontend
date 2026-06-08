@@ -161,7 +161,7 @@ export function TicketToolsPanel({
         aria-label="Fechar painel"
         onClick={onClose}
       />
-      <div className="relative z-50 w-full max-w-md bg-white shadow-2xl border-l border-slate-200 flex flex-col h-full">
+      <div className="relative z-50 w-full max-w-md bg-surface shadow-2xl border-l border-line flex flex-col h-full">
         {placaSugerida ? (
           <div className="px-4 py-2 border-b border-purple-100 bg-purple-50 shrink-0">
             <Link
@@ -172,29 +172,29 @@ export function TicketToolsPanel({
             </Link>
           </div>
         ) : null}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 shrink-0">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-line shrink-0">
           <div>
-            <h3 className="font-semibold text-slate-900 text-sm">Ferramentas</h3>
-            <p className="text-xs text-slate-500 truncate max-w-[240px]">{contactName}</p>
+            <h3 className="font-semibold text-ink text-sm">Ferramentas</h3>
+            <p className="text-xs text-ink-soft truncate max-w-[240px]">{contactName}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"
+            className="p-2 text-ink-faint hover:text-ink rounded-lg hover:bg-subtle"
             aria-label="Fechar"
           >
             ✕
           </button>
         </div>
 
-        <div className="flex border-b border-slate-100 shrink-0">
+        <div className="flex border-b border-line shrink-0">
           <button
             type="button"
             onClick={() => setTab('crm')}
             className={`flex-1 py-2.5 text-xs font-semibold ${
               tab === 'crm'
-                ? 'text-purple-900 border-b-2 border-purple-700'
-                : 'text-slate-500 hover:text-slate-700'
+                ? 'text-ink border-b-2 border-purple-700'
+                : 'text-ink-soft hover:text-ink'
             }`}
           >
             CRM
@@ -204,8 +204,8 @@ export function TicketToolsPanel({
             onClick={() => setTab('agcob')}
             className={`flex-1 py-2.5 text-xs font-semibold ${
               tab === 'agcob'
-                ? 'text-purple-900 border-b-2 border-purple-700'
-                : 'text-slate-500 hover:text-slate-700'
+                ? 'text-ink border-b-2 border-purple-700'
+                : 'text-ink-soft hover:text-ink'
             }`}
             title="Agendamento de cobrança"
           >
@@ -219,27 +219,27 @@ export function TicketToolsPanel({
               {erro}
             </p>
           )}
-          {loading && <p className="text-sm text-slate-400">Carregando...</p>}
+          {loading && <p className="text-sm text-ink-faint">Carregando...</p>}
 
           {!loading && tab === 'crm' && (
             <div className="space-y-4">
-              <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 space-y-2">
-                <label className="text-xs font-semibold text-slate-700">Nova anotação</label>
+              <div className="rounded-xl border border-line bg-subtle/80 p-3 space-y-2">
+                <label className="text-xs font-semibold text-ink">Nova anotação</label>
                 <textarea
                   value={notaBody}
                   onChange={(e) => setNotaBody(e.target.value)}
                   rows={3}
                   placeholder="Negociação, combinado com o cliente, próximos passos..."
-                  className="w-full text-sm text-slate-900 bg-white rounded-lg border border-slate-200 px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-purple-200"
+                  className="w-full text-sm text-ink bg-surface rounded-lg border border-line px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-purple-200"
                 />
-                <label className="text-[11px] text-slate-500 block">
+                <label className="text-[11px] text-ink-soft block">
                   Retornar contato em (opcional)
                 </label>
                 <input
                   type="date"
                   value={notaFollowUp}
                   onChange={(e) => setNotaFollowUp(e.target.value)}
-                  className="w-full text-sm text-slate-900 bg-white rounded-lg border border-slate-200 px-3 py-1.5"
+                  className="w-full text-sm text-ink bg-surface rounded-lg border border-line px-3 py-1.5"
                 />
                 <button
                   type="button"
@@ -252,24 +252,24 @@ export function TicketToolsPanel({
               </div>
 
               <div className="space-y-2">
-                <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wide">
+                <h4 className="text-xs font-bold text-ink-soft uppercase tracking-wide">
                   Histórico
                 </h4>
                 {notes.length === 0 && (
-                  <p className="text-xs text-slate-400">Nenhuma anotação ainda.</p>
+                  <p className="text-xs text-ink-faint">Nenhuma anotação ainda.</p>
                 )}
                 {notes.map((n) => (
                   <div
                     key={n.id}
-                    className="rounded-lg border border-slate-100 bg-white p-3 text-sm shadow-sm"
+                    className="rounded-lg border border-line bg-surface p-3 text-sm shadow-sm"
                   >
-                    <p className="text-slate-800 whitespace-pre-wrap">{n.body}</p>
+                    <p className="text-ink whitespace-pre-wrap">{n.body}</p>
                     {n.followUpAt && (
                       <p className="text-[11px] text-amber-700 mt-1">
                         Retorno: {formatDate(n.followUpAt)}
                       </p>
                     )}
-                    <p className="text-[10px] text-slate-400 mt-2">
+                    <p className="text-[10px] text-ink-faint mt-2">
                       {n.createdBy.name} · {formatDateTime(n.createdAt)}
                     </p>
                   </div>
@@ -301,39 +301,39 @@ export function TicketToolsPanel({
                 </div>
               )}
 
-              <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 space-y-2">
-                <p className="text-xs text-slate-600">
+              <div className="rounded-xl border border-line bg-subtle/80 p-3 space-y-2">
+                <p className="text-xs text-ink-soft">
                   O cliente combinou um prazo? Pausa a cobrança automática (bot e rotinas) até a
                   data. Depois disso, se ainda houver pendência, volta a ser cobrado.
                 </p>
-                <label className="text-xs font-semibold text-slate-700">CPF / CNPJ</label>
+                <label className="text-xs font-semibold text-ink">CPF / CNPJ</label>
                 <input
                   value={cpf}
                   onChange={(e) => setCpf(e.target.value)}
                   placeholder="Somente números"
-                  className="w-full text-sm text-slate-900 bg-white rounded-lg border border-slate-200 px-3 py-2"
+                  className="w-full text-sm text-ink bg-surface rounded-lg border border-line px-3 py-2"
                 />
-                <label className="text-xs font-semibold text-slate-700">Contrato (opcional)</label>
+                <label className="text-xs font-semibold text-ink">Contrato (opcional)</label>
                 <input
                   value={contrato}
                   onChange={(e) => setContrato(e.target.value)}
-                  className="w-full text-sm text-slate-900 bg-white rounded-lg border border-slate-200 px-3 py-2"
+                  className="w-full text-sm text-ink bg-surface rounded-lg border border-line px-3 py-2"
                 />
-                <label className="text-xs font-semibold text-slate-700">
+                <label className="text-xs font-semibold text-ink">
                   Retomar cobrança em
                 </label>
                 <input
                   type="date"
                   value={retomarEm}
                   onChange={(e) => setRetomarEm(e.target.value)}
-                  className="w-full text-sm text-slate-900 bg-white rounded-lg border border-slate-200 px-3 py-2"
+                  className="w-full text-sm text-ink bg-surface rounded-lg border border-line px-3 py-2"
                 />
-                <label className="text-xs font-semibold text-slate-700">Observações</label>
+                <label className="text-xs font-semibold text-ink">Observações</label>
                 <textarea
                   value={motivo}
                   onChange={(e) => setMotivo(e.target.value)}
                   rows={2}
-                  className="w-full text-sm rounded-lg border border-slate-200 px-3 py-2 resize-none"
+                  className="w-full text-sm rounded-lg border border-line px-3 py-2 resize-none"
                 />
                 <button
                   type="button"
@@ -347,17 +347,17 @@ export function TicketToolsPanel({
 
               {agendamentos.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wide">
+                  <h4 className="text-xs font-bold text-ink-soft uppercase tracking-wide">
                     Histórico de agendamentos
                   </h4>
                   {agendamentos.map((a) => (
                     <div
                       key={a.id}
-                      className="rounded-lg border border-slate-100 p-2 text-xs text-slate-600"
+                      className="rounded-lg border border-line p-2 text-xs text-ink-soft"
                     >
                       <span
                         className={`font-semibold ${
-                          a.status === 'ACTIVE' ? 'text-teal-700' : 'text-slate-400'
+                          a.status === 'ACTIVE' ? 'text-teal-700' : 'text-ink-faint'
                         }`}
                       >
                         {a.status === 'ACTIVE' ? 'Ativo' : 'Cancelado'}

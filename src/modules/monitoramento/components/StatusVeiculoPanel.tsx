@@ -13,7 +13,7 @@ const CORES = {
   verde: 'bg-emerald-50 border-emerald-200 text-emerald-800',
   vermelho: 'bg-red-50 border-red-200 text-red-800',
   ambar: 'bg-amber-50 border-amber-200 text-amber-900',
-  cinza: 'bg-slate-50 border-slate-200 text-slate-600',
+  cinza: 'bg-subtle border-line text-ink-soft',
   azul: 'bg-sky-50 border-sky-200 text-sky-800',
 } as const;
 
@@ -91,7 +91,7 @@ export function StatusVeiculoPanel({ status }: Props) {
 
   return (
     <div className="rounded-xl border border-purple-100 bg-gradient-to-br from-purple-50/80 to-white p-3">
-      <h3 className="text-xs font-semibold text-purple-950 mb-2">Status do equipamento</h3>
+      <h3 className="text-xs font-semibold text-ink mb-2">Status do equipamento</h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         <ItemStatus rotulo="Ignição" valor={ign.valor} cor={ign.cor} />
         <ItemStatus rotulo="Bloqueio" valor={bloq.valor} cor={bloq.cor} />
@@ -109,7 +109,7 @@ export function StatusVeiculoPanel({ status }: Props) {
           cor="azul"
         />
       </div>
-      <p className="text-[10px] text-slate-500 mt-2">
+      <p className="text-[10px] text-ink-soft mt-2">
         Dados da API Rastro — atualize posições para refletir o estado real após comandos SMS.
       </p>
     </div>

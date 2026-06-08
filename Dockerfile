@@ -13,6 +13,7 @@ COPY . .
 # As variáveis de ambiente devem ser passadas durante o build ou run
 ARG NEXT_PUBLIC_API_URL=""
 ENV NEXT_PUBLIC_API_URL=""
+ENV NODE_OPTIONS="--max-old-space-size=1200"
 
 RUN npm run build
 

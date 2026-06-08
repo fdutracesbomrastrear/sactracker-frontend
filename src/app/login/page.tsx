@@ -36,52 +36,56 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-purple-950 relative overflow-hidden">
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-purple-600 rounded-full mix-blend-multiply filter blur-[128px] opacity-50" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-amber-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-30" />
-
-      <div className="relative w-full max-w-md rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 p-8 shadow-2xl">
+    <div className="flex min-h-screen items-center justify-center bg-slate-950 font-sans relative overflow-hidden">
+      {/* Sutil gradiente de profundidade de fundo para aspecto corporativo */}
+      <div className="absolute top-0 left-0 right-0 h-[500px] bg-gradient-to-b from-purple-950/20 to-transparent pointer-events-none" />
+      
+      <div className="relative w-full max-w-[440px] rounded-3xl border border-slate-900 bg-slate-900/30 p-10 backdrop-blur-2xl shadow-[0_8px_30px_rgb(0,0,0,0.4)] flex flex-col">
+        {/* Branding */}
         <div className="mb-8 text-center">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-500/30 mb-4">
-            <span className="text-2xl font-bold text-purple-950">ST</span>
+          <div className="mx-auto w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center shadow-md border border-slate-800 bg-white mb-4 transition-transform hover:scale-105 duration-300">
+            <img src="/logo.png" alt="SacTracker" className="w-12 h-12 object-contain" />
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">SacTracker</h1>
-          <p className="mt-2 text-sm text-purple-200">
-            Plataforma Omnichannel de Rastreamento
+          <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">SacTracker</h1>
+          <p className="mt-2 text-xs text-ink-faint font-medium">
+            Plataforma Omnichannel de Rastreamento & Atendimento
           </p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-6">
+        {/* Formulário */}
+        <form onSubmit={handleLogin} className="space-y-5">
           {error && (
-            <p className="text-sm text-red-300 bg-red-500/20 border border-red-400/30 rounded-xl px-4 py-3">
-              {error}
-            </p>
+            <div className="text-xs font-semibold text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
+              ⚠️ {error}
+            </div>
           )}
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-purple-100">
-              E-mail
+            <label className="mb-1.5 block text-xs font-bold text-ink-faint uppercase tracking-wider">
+              E-mail corporativo
             </label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl bg-purple-950/50 border border-purple-800/50 px-4 py-3 text-white placeholder-purple-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/20 transition-all"
-              placeholder="atendente@bomrastrear.com"
+              className="auth-input w-full rounded-xl bg-zinc-900/70 border border-zinc-700 px-4 py-3 text-white text-sm placeholder-zinc-500 caret-purple-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/10 transition-all font-medium [color-scheme:dark]"
+              placeholder="seuemail@bomrastrear.com.br"
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-purple-100">
-              Senha
-            </label>
+            <div className="flex justify-between items-center mb-1.5">
+              <label className="block text-xs font-bold text-ink-faint uppercase tracking-wider">
+                Senha de acesso
+              </label>
+            </div>
             <input
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl bg-purple-950/50 border border-purple-800/50 px-4 py-3 text-white placeholder-purple-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/20 transition-all"
+              className="auth-input w-full rounded-xl bg-zinc-900/70 border border-zinc-700 px-4 py-3 text-white text-sm placeholder-zinc-500 caret-purple-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/10 transition-all font-medium [color-scheme:dark]"
               placeholder="••••••••"
             />
           </div>
@@ -89,18 +93,25 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-purple-500/30 transition-all hover:scale-[1.02] disabled:opacity-70 disabled:hover:scale-100"
+            className="w-full rounded-xl bg-purple-900 hover:bg-purple-800 px-4 py-3 text-sm font-bold text-white shadow-md shadow-purple-900/20 transition-all duration-200 hover:-translate-y-[1px] active:translate-y-[1px] disabled:opacity-70 disabled:hover:translate-y-0"
           >
-            {loading ? 'Entrando...' : 'Acessar Painel'}
+            {loading ? 'Validando credenciais...' : 'Acessar painel'}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-purple-300/70 leading-relaxed">
-          Primeiro acesso? Rode <code className="text-amber-300">npm run db:seed</code> no backend.
-          <br />
-          Atendente: atendente@bomrastrear.com · Financeiro: financeiro@bomrastrear.com
-        </p>
+        {/* Informações Extras de Suporte */}
+        <div className="mt-8 pt-6 border-t border-slate-900/60 text-center space-y-2">
+          <p className="text-[10px] text-ink-soft leading-relaxed font-semibold">
+            Atendimento: <span className="text-ink-faint">atendente@bomrastrear.com</span>
+            <br />
+            Financeiro: <span className="text-ink-faint">financeiro@bomrastrear.com</span>
+          </p>
+          <p className="text-[9px] text-ink-soft">
+            Ambiente Seguro · SacTracker v1.2
+          </p>
+        </div>
       </div>
     </div>
   );
 }
+

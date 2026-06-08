@@ -1,6 +1,6 @@
 import { apiFetch } from '@/modules/core/lib/api';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL !== undefined ? process.env.NEXT_PUBLIC_API_URL : 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 export interface UserItem {
   id: string;

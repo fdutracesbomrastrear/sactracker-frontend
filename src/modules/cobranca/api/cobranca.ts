@@ -1,6 +1,6 @@
 import { getToken, clearSession } from '@/modules/core/lib/auth';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL !== undefined ? process.env.NEXT_PUBLIC_API_URL : 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 async function apiFetch(url: string, options: RequestInit = {}) {
   const token = getToken();

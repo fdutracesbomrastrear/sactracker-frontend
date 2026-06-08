@@ -1,9 +1,9 @@
-import { AuthGuard } from '@/modules/core/components/AuthGuard';
+import { AppShell } from '@/modules/core/components/AppShell';
 
 export default function CobrancaLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AuthGuard allowedPermissions={['COBRANCA']}>
+    <AppShell allowedPermissions={['COBRANCA']}>
       {children}
-    </AuthGuard>
+    </AppShell>
   );
 }

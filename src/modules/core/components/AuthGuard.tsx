@@ -49,7 +49,7 @@ export function AuthGuard({ children, allowedPermissions, className }: Props) {
       <div
         className={
           className ??
-          'flex h-screen items-center justify-center bg-slate-50 text-slate-500'
+          'flex h-screen items-center justify-center bg-subtle text-ink-soft'
         }
       >
         Carregando...

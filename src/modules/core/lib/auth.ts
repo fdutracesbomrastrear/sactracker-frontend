@@ -8,6 +8,7 @@ export type AuthUser = {
   name: string;
   email: string;
   permissions: ModulePermission[];
+  avatarUrl?: string | null;
 };
 
 export function getToken(): string | null {
@@ -29,6 +30,19 @@ export function getUser(): AuthUser | null {
 export function setSession(token: string, user: AuthUser) {
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(USER_KEY, JSON.stringify(user));
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('sactracker-profile-updated'));
+  }
+}
+
+export function updateStoredUser(patch: Partial<AuthUser>) {
+  const token = getToken();
+  const user = getUser();
+  if (!token || !user) return;
+  localStorage.setItem(USER_KEY, JSON.stringify({ ...user, ...patch }));
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('sactracker-profile-updated'));
+  }
 }
 
 export function clearSession() {

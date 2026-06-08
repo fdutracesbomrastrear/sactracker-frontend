@@ -18,6 +18,7 @@ export function WhatsAppQrOverlay() {
   const [qr, setQr] = useState<WhatsAppQrResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [falhasConsecutivas, setFalhasConsecutivas] = useState(0);
 
   const user = getUser();
   const isAdmin = user ? parsePermissions(user.permissions).includes('ADMIN') : false;
@@ -47,14 +48,23 @@ export function WhatsAppQrOverlay() {
     try {
       const status = await fetchWhatsAppStatus();
       setState(status.state);
+      setFalhasConsecutivas(0); // reset ao ter sucesso
       if (status.connected) {
         setVisible(false);
         setQr(null);
         return;
       }
-      setVisible(true);
+      // Só mostra overlay se genuinamente desconectado (state != open)
+      if (status.state !== 'open') {
+        setVisible(true);
+      }
     } catch {
-      setVisible(true);
+      // Erro de rede: incrementa contador, só exibe overlay após 3 falhas consecutivas
+      setFalhasConsecutivas((prev) => {
+        const novas = prev + 1;
+        if (novas >= 3) setVisible(true);
+        return novas;
+      });
     }
   }, [autenticado]);
 
@@ -93,7 +103,7 @@ export function WhatsAppQrOverlay() {
 
   return (
     <div className="fixed inset-0 z-[95] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden">
+      <div className="w-full max-w-md rounded-2xl bg-surface shadow-2xl border border-line overflow-hidden">
         <div className="bg-gradient-to-r from-purple-950 to-purple-800 px-5 py-4 text-white">
           <h2 className="text-lg font-bold">WhatsApp desconectado</h2>
           <p className="text-xs text-purple-200 mt-1">
@@ -115,11 +125,11 @@ export function WhatsAppQrOverlay() {
           )}
 
           {loading && !qr?.imageDataUrl && (
-            <p className="text-sm text-slate-500">Gerando QR Code…</p>
+            <p className="text-sm text-ink-soft">Gerando QR Code…</p>
           )}
 
           {qr?.imageDataUrl && (
-            <div className="inline-block p-3 bg-white rounded-xl ring-1 ring-slate-200 shadow-inner">
+            <div className="inline-block p-3 bg-surface rounded-xl ring-1 ring-line shadow-inner">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={qr.imageDataUrl}
@@ -130,22 +140,22 @@ export function WhatsAppQrOverlay() {
           )}
 
           {qr?.pairingCode && (
-            <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
-              <p className="text-xs text-slate-500 mb-1">Código de pareamento</p>
-              <p className="text-2xl font-bold tracking-[0.3em] text-purple-950">
+            <div className="rounded-xl bg-subtle border border-line p-3">
+              <p className="text-xs text-ink-soft mb-1">Código de pareamento</p>
+              <p className="text-2xl font-bold tracking-[0.3em] text-ink">
                 {qr.pairingCode}
               </p>
-              <p className="text-[11px] text-slate-500 mt-2">
+              <p className="text-[11px] text-ink-soft mt-2">
                 WhatsApp → Aparelhos conectados → Conectar com número
               </p>
             </div>
           )}
 
           {!qr?.imageDataUrl && !loading && qr?.message && (
-            <p className="text-sm text-slate-500">{qr.message}</p>
+            <p className="text-sm text-ink-soft">{qr.message}</p>
           )}
 
-          <ol className="text-left text-xs text-slate-600 space-y-1.5 bg-slate-50 rounded-xl p-3">
+          <ol className="text-left text-xs text-ink-soft space-y-1.5 bg-subtle rounded-xl p-3">
             <li>1. Abra o WhatsApp no celular</li>
             <li>2. Menu → Aparelhos conectados → Conectar aparelho</li>
             <li>3. Escaneie o QR acima</li>
@@ -164,7 +174,7 @@ export function WhatsAppQrOverlay() {
               type="button"
               disabled={loading}
               onClick={() => void verificar()}
-              className="px-4 py-2 text-sm font-medium border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium border border-line rounded-lg hover:bg-subtle disabled:opacity-50"
             >
               Já conectei
             </button>

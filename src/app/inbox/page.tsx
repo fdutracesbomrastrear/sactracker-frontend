@@ -17,16 +17,15 @@ import { clearSession, getToken, getUser } from '@/modules/core/lib/auth';
 import { useRouter } from 'next/navigation';
 import { FinanceiroPanel } from '@/modules/financeiro/components/FinanceiroPanel';
 import { ChatMessageContent } from '@/modules/inbox/components/ChatMessageContent';
-import { AppSidebar } from '@/modules/core/components/AppSidebar';
 import { parsePermissions, roleLabel } from '@/modules/core/lib/roles';
 import { TicketToolsPanel } from '@/modules/inbox/components/TicketToolsPanel';
 import { usePanelSettings } from '@/modules/core/hooks/PanelSettingsProvider';
 import { bubblePadding, fontSizeClass, messageGap } from '@/modules/core/lib/panel-settings';
-import { AuthGuard } from '@/modules/core/components/AuthGuard';
 import { playNotificationSound } from '@/modules/core/lib/sound';
 import { NewChatModal } from '@/modules/inbox/components/NewChatModal';
+import { fetchQuickResponses, QuickResponseItem } from '@/modules/admin/api/quick-responses';
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL || '';
 
 function formatTime(dateStr: string) {
   const date = new Date(dateStr);
@@ -73,8 +72,19 @@ export default function InboxPage() {
   const activeTicketIdRef = useRef<string | null>(null);
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  const [quickResponses, setQuickResponses] = useState<QuickResponseItem[]>([]);
+  const [showQuickResponses, setShowQuickResponses] = useState(false);
+  const [quickResponseFilter, setQuickResponseFilter] = useState('');
+
   const filterRef = useRef(filter);
   const settingsRef = useRef(settings);
+
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
 
   useEffect(() => {
     activeTicketIdRef.current = activeTicket?.id ?? null;
@@ -91,8 +101,12 @@ export default function InboxPage() {
   const loadTickets = useCallback(async () => {
     try {
       setError(null);
-      const data = await fetchTickets(filter);
+      const [data, qrData] = await Promise.all([
+        fetchTickets(filter),
+        fetchQuickResponses().catch(() => [])
+      ]);
       setTickets(dedupeById(data));
+      setQuickResponses(qrData);
       setActiveTicket((prev) => {
         if (prev && data.some((t) => t.id === prev.id)) {
           return data.find((t) => t.id === prev.id) ?? data[0] ?? null;
@@ -149,8 +163,18 @@ export default function InboxPage() {
       message: ChatMessage;
       contact: { id: string; name: string; phone: string };
     }) => {
-      if (settingsRef.current.soundEnabled && !payload.message.fromMe) {
-        playNotificationSound();
+      if (!payload.message.fromMe) {
+        if (settingsRef.current.soundEnabled) {
+          playNotificationSound();
+        }
+        
+        // Push notification se a aba não estiver visível
+        if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
+          new Notification(`Nova mensagem de ${payload.contact.name}`, {
+            body: payload.message.content,
+            icon: '/favicon.ico'
+          });
+        }
       }
 
       const currentFilter = filterRef.current;
@@ -259,6 +283,7 @@ export default function InboxPage() {
       }
       applySentMessage(saved);
       setInput('');
+      setShowQuickResponses(false);
     } catch (err) {
       setError(
         err instanceof Error
@@ -268,6 +293,24 @@ export default function InboxPage() {
     } finally {
       setSending(false);
     }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setInput(val);
+    
+    if (val.startsWith('/')) {
+      const term = val.slice(1).toLowerCase();
+      setQuickResponseFilter(term);
+      setShowQuickResponses(true);
+    } else {
+      setShowQuickResponses(false);
+    }
+  };
+
+  const handleSelectQuickResponse = (text: string) => {
+    setInput(text);
+    setShowQuickResponses(false);
   };
 
   const handleFilePick = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -348,17 +391,16 @@ export default function InboxPage() {
   });
 
   return (
-    <AuthGuard allowedPermissions={['INBOX']}>
-      <div className="flex h-screen overflow-hidden bg-slate-50 font-sans">
-        <AppSidebar permissions={permissions} />
+    <>
+      <div className="flex flex-1 overflow-hidden bg-app font-sans min-w-0">
 
-      <div className="w-80 bg-white border-r border-slate-200 flex flex-col z-10 shrink-0">
-        <div className="p-5 border-b border-slate-100">
+      <div className="w-80 bg-surface border-r border-line flex flex-col z-10 shrink-0">
+        <div className="p-5 border-b border-line">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-purple-950">Atendimentos</h2>
+            <h2 className="text-lg font-semibold text-ink">Atendimentos</h2>
             <button
               onClick={() => setIsNewChatOpen(true)}
-              className="w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center hover:bg-purple-200 transition-colors"
+              className="w-8 h-8 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center hover:bg-purple-100 dark:bg-purple-500/15 dark:text-purple-300 dark:hover:bg-purple-500/25 transition-colors"
               title="Nova Conversa"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -367,7 +409,7 @@ export default function InboxPage() {
             </button>
           </div>
           {error && (
-            <p className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded-lg">{error}</p>
+            <p className="mt-2 text-xs text-red-600 bg-red-50 dark:bg-red-500/10 dark:text-red-400 p-2 rounded-lg">{error}</p>
           )}
           <div className="mt-4 flex gap-2">
             <button
@@ -375,8 +417,8 @@ export default function InboxPage() {
               onClick={() => setFilter('OPEN')}
                     className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors ${
                 filter === 'OPEN'
-                  ? 'bg-purple-950 text-white shadow-sm'
-                  : 'text-slate-500 hover:bg-slate-100'
+                  ? 'bg-purple-700 text-white'
+                  : 'text-ink-soft hover:bg-subtle'
               }`}
             >
               Abertos
@@ -386,8 +428,8 @@ export default function InboxPage() {
               onClick={() => setFilter('PENDING')}
                     className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors ${
                 filter === 'PENDING'
-                  ? 'bg-purple-950 text-white shadow-sm'
-                  : 'text-slate-500 hover:bg-slate-100'
+                  ? 'bg-purple-700 text-white'
+                  : 'text-ink-soft hover:bg-subtle'
               }`}
             >
               Pendentes
@@ -395,7 +437,7 @@ export default function InboxPage() {
           </div>
           <div className="mt-4">
             <div className="relative">
-              <svg className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="absolute left-3 top-2.5 h-4 w-4 text-ink-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input
@@ -403,7 +445,7 @@ export default function InboxPage() {
                 placeholder="Buscar conversa..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                className="w-full pl-9 pr-4 py-2 bg-app border border-line rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400/60 focus:border-transparent transition-all"
               />
             </div>
           </div>
@@ -411,15 +453,15 @@ export default function InboxPage() {
 
         <div className="flex-1 overflow-y-auto">
           {loading && (
-            <p className="p-4 text-sm text-slate-400 text-center">Carregando...</p>
+            <p className="p-4 text-sm text-ink-faint text-center">Carregando...</p>
           )}
           {!loading && tickets.length === 0 && (
-            <p className="p-4 text-sm text-slate-400 text-center">
+            <p className="p-4 text-sm text-ink-faint text-center">
               Nenhum atendimento. Envie uma mensagem pelo WhatsApp para testar.
             </p>
           )}
           {!loading && tickets.length > 0 && filteredTickets.length === 0 && (
-            <p className="p-4 text-sm text-slate-400 text-center">
+            <p className="p-4 text-sm text-ink-faint text-center">
               Nenhuma conversa encontrada para a busca.
             </p>
           )}
@@ -430,32 +472,28 @@ export default function InboxPage() {
                 type="button"
                 key={ticket.id}
                 onClick={() => setActiveTicket(ticket)}
-                className={`w-full text-left p-4 border-b border-slate-100/80 transition-colors ${
+                className={`w-full text-left p-4 border-b border-line transition-colors ${
                   isActive
-                    ? 'bg-violet-50/90 border-l-[3px] border-l-purple-700'
-                    : 'bg-white border-l-[3px] border-l-transparent hover:bg-slate-50/80'
+                    ? 'bg-subtle border-l-[3px] border-l-purple-600'
+                    : 'bg-transparent border-l-[3px] border-l-transparent hover:bg-subtle'
                 }`}
               >
                 <div className="flex justify-between items-center mb-1">
                   <span
                     className={`font-semibold truncate pr-2 ${
-                      isActive ? 'text-blue-900' : 'text-slate-700'
+                      isActive ? 'text-ink' : 'text-ink'
                     }`}
                   >
                     {ticket.contact.name}
                   </span>
-                  <span
-                    className={`text-xs shrink-0 ${
-                      isActive ? 'text-blue-600' : 'text-slate-400'
-                    }`}
-                  >
+                  <span className="text-xs shrink-0 text-ink-faint">
                     {formatTime(ticket.lastMessageAt)}
                   </span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <p className="text-sm text-slate-500 truncate pr-2">{ticket.lastMessage}</p>
+                <div className="flex justify-between items-center gap-2">
+                  <p className="text-sm text-ink-soft truncate pr-2">{ticket.lastMessage}</p>
                   {ticket.unread > 0 && (
-                    <span className="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                    <span className="bg-amber-400 text-ink text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0">
                       {ticket.unread}
                     </span>
                   )}
@@ -471,40 +509,40 @@ export default function InboxPage() {
         style={{ backgroundColor: settings.chatBg }}
       >
         {!activeTicket ? (
-          <div className="flex-1 flex items-center justify-center text-slate-400">
+          <div className="flex-1 flex items-center justify-center text-ink-faint">
             Selecione um atendimento ou aguarde novas mensagens
           </div>
         ) : (
           <>
-            <div className="relative z-10 h-[4.5rem] border-b border-slate-200/80 bg-white/90 backdrop-blur-md flex items-center justify-between px-6 shrink-0 shadow-sm">
-              <div className="flex items-center gap-4 min-w-0">
-                <div className="w-11 h-11 bg-gradient-to-br from-violet-100 to-purple-200 ring-2 ring-white shadow-md rounded-full flex items-center justify-center font-bold text-purple-800 text-base shrink-0">
+            <div className="relative z-10 h-16 border-b border-line bg-surface flex items-center justify-between px-6 shrink-0">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="w-10 h-10 bg-purple-100 dark:bg-purple-500/20 rounded-full flex items-center justify-center font-semibold text-purple-700 dark:text-purple-300 text-base shrink-0">
                   {activeTicket.contact.name.charAt(0)}
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-slate-900 text-base truncate max-w-[200px] sm:max-w-xs">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <h3 className="font-semibold text-ink text-base truncate">
                       {activeTicket.contact.name}
                     </h3>
                     <span
-                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0 ${
                         activeTicket.mode === 'HUMAN'
-                          ? 'bg-violet-100 text-violet-700 ring-1 ring-violet-200/60'
-                          : 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/60'
+                          ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-500/30'
+                          : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30'
                       }`}
                     >
                       {activeTicket.mode === 'HUMAN' ? 'Você' : 'Bot Gina'}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 tabular-nums">{activeTicket.contact.phone}</p>
+                  <p className="text-xs text-ink-soft tabular-nums truncate">{activeTicket.contact.phone}</p>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-2 justify-end shrink-0">
+              <div className="flex items-center gap-1.5 justify-end shrink-0">
                 {activeTicket.mode === 'BOT' ? (
                   <button
                     type="button"
                     onClick={() => void handleAssume()}
-                    className="px-3.5 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg shadow-sm shadow-emerald-900/20 hover:bg-emerald-500 transition-colors"
+                    className="px-3.5 h-9 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-500 transition-colors"
                   >
                     Assumir
                   </button>
@@ -512,7 +550,7 @@ export default function InboxPage() {
                   <button
                     type="button"
                     onClick={() => void handleReleaseBot()}
-                    className="px-3.5 py-2 bg-white text-emerald-800 text-sm font-medium rounded-lg ring-1 ring-emerald-200 hover:bg-emerald-50 transition-colors"
+                    className="px-3.5 h-9 bg-surface text-emerald-700 dark:text-emerald-400 text-sm font-medium rounded-lg border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
                   >
                     Devolver ao bot
                   </button>
@@ -520,7 +558,7 @@ export default function InboxPage() {
                 <button
                   type="button"
                   onClick={openSettings}
-                  className="px-3 py-2 bg-white text-slate-600 text-sm font-medium rounded-lg ring-1 ring-slate-200 hover:bg-slate-50 transition-colors"
+                  className="px-3 h-9 bg-surface text-ink-soft text-sm font-medium rounded-lg border border-line hover:bg-subtle transition-colors"
                   title="Configurações"
                 >
                   ⚙
@@ -529,16 +567,16 @@ export default function InboxPage() {
                   <button
                     type="button"
                     onClick={() => setToolsMenuOpen((v) => !v)}
-                    className="px-3 py-2 bg-white text-purple-900 text-sm font-bold rounded-lg ring-1 ring-purple-200 hover:bg-purple-50 transition-colors"
+                    className="px-3 h-9 bg-surface text-purple-700 dark:text-purple-300 text-sm font-bold rounded-lg border border-purple-200 dark:border-purple-500/30 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-colors"
                     title="CRM e agendamentos"
                   >
                     +
                   </button>
                   {toolsMenuOpen && (
-                    <div className="absolute right-0 top-full mt-1 w-44 rounded-xl border border-slate-200 bg-white shadow-lg py-1 z-[60]">
+                    <div className="absolute right-0 top-full mt-1 w-44 rounded-xl border border-line bg-surface shadow-lg py-1 z-[60]">
                       <button
                         type="button"
-                        className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                        className="w-full text-left px-3 py-2 text-sm text-ink hover:bg-subtle"
                         onClick={() => {
                           setToolsTab('crm');
                           setToolsOpen(true);
@@ -549,7 +587,7 @@ export default function InboxPage() {
                       </button>
                       <button
                         type="button"
-                        className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                        className="w-full text-left px-3 py-2 text-sm text-ink hover:bg-subtle"
                         onClick={() => {
                           setToolsTab('agcob');
                           setToolsOpen(true);
@@ -564,14 +602,14 @@ export default function InboxPage() {
                 <button
                   type="button"
                   onClick={handleResolve}
-                  className="px-3.5 py-2 bg-purple-950 text-white text-sm font-medium rounded-lg shadow-sm shadow-purple-950/25 hover:bg-purple-900 transition-colors"
+                  className="px-3.5 h-9 bg-purple-700 text-white text-sm font-medium rounded-lg hover:bg-purple-600 transition-colors"
                 >
                   Resolver
                 </button>
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="px-3.5 py-2 text-slate-500 text-sm font-medium rounded-lg hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                  className="px-3.5 h-9 text-ink-soft text-sm font-medium rounded-lg hover:bg-subtle hover:text-ink transition-colors"
                   title="Sair"
                 >
                   Sair
@@ -588,8 +626,8 @@ export default function InboxPage() {
                   className={`flex w-full ${msg.fromMe ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[min(100%,32rem)] shadow-md rounded-2xl ${bubblePadding(settings.compactMode)} ${fontSizeClass(settings.fontSize)} ${
-                      msg.fromMe ? 'rounded-br-md' : 'rounded-bl-md ring-1 ring-slate-200/90 shadow-slate-200/50'
+                    className={`max-w-[min(100%,32rem)] rounded-2xl ${bubblePadding(settings.compactMode)} ${fontSizeClass(settings.fontSize)} ${
+                      msg.fromMe ? 'rounded-br-md' : 'rounded-bl-md border border-line'
                     }`}
                     style={
                       msg.fromMe
@@ -622,10 +660,10 @@ export default function InboxPage() {
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="relative z-0 p-4 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shrink-0 shadow-[0_-4px_24px_rgba(15,23,42,0.06)]">
+            <div className="relative z-0 p-4 bg-surface border-t border-line shrink-0">
               {selectedFile && (
-                <div className="mb-3 flex items-center gap-3 text-sm text-slate-700 bg-violet-50/80 ring-1 ring-violet-100 rounded-xl px-3 py-2.5">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-base shadow-sm">📎</span>
+                <div className="mb-3 flex items-center gap-3 text-sm text-ink bg-subtle border border-line rounded-xl px-3 py-2.5">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface text-base border border-line">📎</span>
                   <span className="truncate flex-1 font-medium">{selectedFile.name}</span>
                   <button
                     type="button"
@@ -633,7 +671,7 @@ export default function InboxPage() {
                       setSelectedFile(null);
                       if (fileInputRef.current) fileInputRef.current.value = '';
                     }}
-                    className="text-xs font-medium text-red-600 hover:text-red-700 px-2 py-1 rounded-md hover:bg-red-50 shrink-0"
+                    className="text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-700 px-2 py-1 rounded-md hover:bg-red-50 dark:hover:bg-red-500/10 shrink-0"
                   >
                     Remover
                   </button>
@@ -646,13 +684,43 @@ export default function InboxPage() {
                 accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
                 onChange={handleFilePick}
               />
-              <div className="flex items-end gap-2 rounded-2xl bg-slate-50 ring-1 ring-slate-200/80 p-1.5 pl-2 shadow-inner">
+              
+              {/* Quick Responses Popover */}
+              {showQuickResponses && (
+                <div className="absolute bottom-full left-0 mb-2 w-full max-w-md bg-surface rounded-xl shadow-lg border border-line z-50 overflow-hidden">
+                  <div className="bg-subtle px-3 py-2 border-b border-line text-xs font-bold text-purple-700 dark:text-purple-300 uppercase">
+                    Respostas Rápidas
+                  </div>
+                  <div className="max-h-60 overflow-y-auto">
+                    {quickResponses
+                      .filter(qr => qr.shortcut.toLowerCase().includes(quickResponseFilter))
+                      .map((qr) => (
+                        <button
+                          key={qr.id}
+                          type="button"
+                          onClick={() => handleSelectQuickResponse(qr.text)}
+                          className="w-full text-left px-4 py-3 border-b border-line hover:bg-subtle transition-colors focus:bg-subtle focus:outline-none"
+                        >
+                          <div className="font-bold text-purple-700 dark:text-purple-300 mb-0.5 text-sm">/{qr.shortcut}</div>
+                          <div className="text-sm text-ink-soft truncate">{qr.text}</div>
+                        </button>
+                      ))}
+                    {quickResponses.filter(qr => qr.shortcut.toLowerCase().includes(quickResponseFilter)).length === 0 && (
+                      <div className="px-4 py-3 text-sm text-ink-faint italic">
+                        Nenhum atalho encontrado.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-end gap-2 rounded-xl bg-app border border-line p-1.5 pl-2 relative">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={sending}
                   title="Anexar arquivo"
-                  className="mb-0.5 p-2.5 text-slate-400 hover:text-purple-700 hover:bg-white rounded-xl transition-colors disabled:opacity-50"
+                  className="mb-0.5 p-2.5 text-ink-faint hover:text-purple-700 dark:hover:text-purple-300 hover:bg-surface rounded-lg transition-colors disabled:opacity-50"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
@@ -661,27 +729,27 @@ export default function InboxPage() {
                 <input
                   type="text"
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
+                  onChange={handleInputChange}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && settings.enterToSend && !e.shiftKey) {
                       e.preventDefault();
                       void handleSend();
                     }
                   }}
-                  placeholder={selectedFile ? 'Legenda opcional...' : 'Digite sua mensagem...'}
-                  className="flex-1 min-h-[44px] py-2.5 bg-transparent border-none focus:outline-none text-slate-900 caret-purple-700 placeholder:text-slate-400 text-[15px]"
+                  placeholder={selectedFile ? 'Legenda opcional...' : 'Digite sua mensagem ou / para atalhos'}
+                  className="flex-1 min-h-[44px] py-2.5 bg-transparent border-none focus:outline-none text-ink caret-purple-600 placeholder:text-ink-faint text-[15px]"
                   disabled={sending}
                 />
                 <button
                   type="button"
                   onClick={() => void handleSend()}
                   disabled={sending || (!input.trim() && !selectedFile)}
-                  className="mb-0.5 shrink-0 px-5 py-2.5 bg-gradient-to-b from-amber-400 to-amber-500 text-purple-950 text-sm font-semibold rounded-xl shadow-sm shadow-amber-900/15 hover:from-amber-300 hover:to-amber-400 disabled:opacity-45 disabled:shadow-none transition-all"
+                  className="mb-0.5 shrink-0 px-5 py-2.5 bg-purple-700 text-white text-sm font-semibold rounded-lg hover:bg-purple-600 disabled:opacity-45 transition-colors"
                 >
                   {sending ? 'Enviando…' : 'Enviar'}
                 </button>
               </div>
-              <p className="text-[10px] text-slate-400 mt-2 px-2 text-center">
+              <p className="text-[10px] text-ink-faint mt-2 px-2 text-center">
                 Imagens, PDF, documentos, áudio e vídeo · até 16 MB
               </p>
             </div>
@@ -698,7 +766,7 @@ export default function InboxPage() {
         )}
       </div>
 
-      <div className="w-80 border-l border-slate-200 bg-white flex flex-col shrink-0 min-h-0">
+      <div className="w-80 border-l border-line bg-surface flex flex-col shrink-0 min-h-0">
         <FinanceiroPanel
           compact
           telefoneAtivo={activeTicket?.contact.phone}
@@ -721,7 +789,7 @@ export default function InboxPage() {
           setFilter(ticket.status === 'PENDING' ? 'PENDING' : 'OPEN');
         }}
       />
-    </AuthGuard>
+    </>
   );
 }
 

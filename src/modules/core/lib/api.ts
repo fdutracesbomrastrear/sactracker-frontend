@@ -1,6 +1,6 @@
 import { clearSession, getToken } from './auth';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL !== undefined ? process.env.NEXT_PUBLIC_API_URL : 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 export type TicketItem = {
   id: string;
@@ -27,7 +27,21 @@ import { ModulePermission } from './roles';
 
 export type LoginResponse = {
   token: string;
-  user: { id: string; name: string; email: string; permissions: ModulePermission[] };
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    permissions: ModulePermission[];
+    avatarUrl?: string | null;
+  };
+};
+
+export type MeResponse = {
+  id: string;
+  name: string;
+  email: string;
+  permissions: ModulePermission[];
+  avatarUrl?: string | null;
 };
 
 function authHeaders(): HeadersInit {
@@ -90,10 +104,59 @@ export async function login(email: string, password: string): Promise<LoginRespo
   return res.json();
 }
 
-export async function fetchMe() {
+export async function fetchMe(): Promise<MeResponse> {
   const res = await apiFetch(`${API_URL}/api/auth/me`);
   if (!res.ok) throw new Error('Não autenticado');
   return res.json();
+}
+
+export async function uploadProfileAvatar(file: File): Promise<string> {
+  const { compressImageForAvatar } = await import('@/modules/core/lib/profile');
+  const token = getToken();
+  const blob = await compressImageForAvatar(file);
+  const form = new FormData();
+  form.append('avatar', blob, 'avatar.jpg');
+
+  const res = await fetch(`${API_URL}/api/v1/profile/avatar`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+  });
+
+  if (res.status === 401) {
+    clearSession();
+    if (typeof window !== 'undefined') window.location.href = '/login';
+    throw new Error('Sessão expirada');
+  }
+
+  if (!res.ok) {
+    let msg = `Erro ${res.status}`;
+    try {
+      const data = await res.json();
+      msg = data.error || msg;
+    } catch {
+      /* ignore */
+    }
+    throw new Error(msg);
+  }
+
+  const data = (await res.json()) as { avatarUrl?: string };
+  if (!data.avatarUrl) throw new Error('Resposta inválida do servidor');
+  return data.avatarUrl;
+}
+
+export async function deleteProfileAvatar(): Promise<void> {
+  const res = await apiFetch(`${API_URL}/api/v1/profile/avatar`, { method: 'DELETE' });
+  if (!res.ok) {
+    let msg = `Erro ${res.status}`;
+    try {
+      const data = await res.json();
+      msg = data.error || msg;
+    } catch {
+      /* ignore */
+    }
+    throw new Error(msg);
+  }
 }
 
 export async function fetchTickets(status?: string): Promise<TicketItem[]> {

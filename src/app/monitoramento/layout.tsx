@@ -1,9 +1,9 @@
-import { AuthGuard } from '@/modules/core/components/AuthGuard';
+import { AppShell } from '@/modules/core/components/AppShell';
 
 export default function MonitoramentoLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AuthGuard allowedPermissions={['MONITORAMENTO']}>
+    <AppShell allowedPermissions={['MONITORAMENTO']}>
       {children}
-    </AuthGuard>
+    </AppShell>
   );
 }

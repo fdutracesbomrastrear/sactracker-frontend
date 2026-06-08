@@ -1,9 +1,9 @@
-import { AuthGuard } from '@/modules/core/components/AuthGuard';
+import { AppShell } from '@/modules/core/components/AppShell';
 
 export default function InboxLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AuthGuard allowedPermissions={['INBOX']}>
+    <AppShell allowedPermissions={['INBOX']}>
       {children}
-    </AuthGuard>
+    </AppShell>
   );
 }

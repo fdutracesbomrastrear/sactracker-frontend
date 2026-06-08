@@ -1,6 +1,6 @@
 import { getToken, clearSession } from '@/modules/core/lib/auth';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL !== undefined ? process.env.NEXT_PUBLIC_API_URL : 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 export type FaturaItem = {
   id: string;
@@ -134,4 +134,28 @@ export function formatarTextoBoleto(fatura: FaturaItem, nomeCliente: string) {
   if (fatura.linkBoleto) linhas.push(`Boleto: ${fatura.linkBoleto}`);
   if (fatura.pixCopiaCola) linhas.push(`PIX: ${fatura.pixCopiaCola}`);
   return linhas.join('\n');
+}
+
+export async function refreshFinanceiro(): Promise<{ success: boolean }> {
+  const token = getToken();
+  const res = await fetch(`${API_URL}/api/financeiro/refresh`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (res.status === 401) {
+    clearSession();
+    if (typeof window !== 'undefined') window.location.href = '/login';
+    throw new Error('Sessão expirada');
+  }
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'Erro ao atualizar dados');
+  }
+
+  return res.json();
 }
